@@ -75,6 +75,8 @@
     .record-table th, .record-table td { padding: 8px 6px; }
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="container">
@@ -100,6 +102,20 @@
 </div>
 
 <script>
+// ===================== FIREBASE CONFIG =====================
+const firebaseConfig = {
+  apiKey: "AIzaSyA6AaOEtlsM64W17RgbVwJ9MHG0auFjbmg",
+  authDomain: "pet-health-survey-6f2a1.firebaseapp.com",
+  projectId: "pet-health-survey-6f2a1",
+  storageBucket: "pet-health-survey-6f2a1.firebasestorage.app",
+  messagingSenderId: "564701938024",
+  appId: "1:564701938024:web:2173bc15592c0991db96dd"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const COLLECTION = 'records';
+
+// ===================== LABELS =====================
 let records = [];
 const goalLabels = {
   gut:'调理肠胃',coat:'改善毛发',gain:'增肥',lose:'减肥',
@@ -118,76 +134,32 @@ const histLabels = {
   nephritis:'肾炎',ringworm:'猫藓'
 };
 
-// Try the current page's origin first, then common tunnel patterns
-async function getTunnelBase() {
-  // If we're already on the tunnel, use it
-  if (window.location.hostname.endsWith('.lhr.life') ||
-      window.location.hostname.includes('pinggy') ||
-      window.location.hostname.includes('localhost')) {
-    return window.location.origin;
-  }
-  // On GitHub Pages - try to detect live tunnel
-  try {
-    // Try the most recent tunnel from localStorage
-    const cached = localStorage.getItem('last_tunnel_url');
-    if (cached) {
-      const resp = await fetch(cached + '/api/stats', { signal: AbortSignal.timeout(3000) });
-      if (resp.ok) return cached;
-    }
-  } catch(e) {}
-  return null;
-}
-
+// ===================== DATA =====================
 async function loadData() {
   try {
-    const resp = await fetch('/api/records');
-    if (!resp.ok) throw new Error('API unavailable');
-    records = await resp.json();
-    // Remember this working tunnel URL
-    if (window.location.hostname.endsWith('.lhr.life') || window.location.hostname.includes('pinggy')) {
-      localStorage.setItem('last_tunnel_url', window.location.origin);
-    }
-    document.getElementById('tableContainer').classList.remove('offline');
+    const snap = await db.collection(COLLECTION).orderBy('createdAt','desc').get();
+    records = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      d.id = doc.id;
+      // Convert Firestore timestamp to ISO string
+      if (d.createdAt && d.createdAt.toDate) {
+        d.createdAt = d.createdAt.toDate().toISOString();
+      }
+      records.push(d);
+    });
     updateStats();
     renderTable();
   } catch(e) {
-    showOffline();
+    document.getElementById('tableContainer').innerHTML = '<div class="empty">❌ 加载失败，请检查 Firebase 配置是否正确</div>';
   }
 }
 
-async function loadStats() {
-  try {
-    const resp = await fetch('/api/stats');
-    const stats = await resp.json();
-    document.getElementById('statTotal').textContent = stats.total;
-    document.getElementById('statToday').textContent = stats.today;
-    document.getElementById('statPhones').textContent = stats.phones;
-  } catch(e) { showOffline(); }
-}
-
-function showOffline() {
-  // Save current tunnel URL for future use
-  if (window.location.hostname.endsWith('.lhr.life') || window.location.hostname.includes('pinggy')) {
-    localStorage.setItem('last_tunnel_url', window.location.origin);
-  }
-
-  const cached = localStorage.getItem('last_tunnel_url');
-  const linkHTML = cached
-    ? `<a href="${cached}/admin" style="display:inline-block;padding:12px 24px;background:#FF6B35;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px">👉 ${cached}/admin</a>
-       <p style="color:#8B6F5C;margin-top:8px;font-size:12px">（上次成功访问的地址，点击尝试）</p>`
-    : `<p style="color:#8B6F5C;margin-bottom:8px">请在电脑上运行 <b>start-server.bat</b> 启动服务器</p>
-       <p style="color:#8B6F5C;font-size:13px">启动后终端窗口会显示隧道地址</p>`;
-
-  document.getElementById('statTotal').textContent = '--';
-  document.getElementById('statToday').textContent = '--';
-  document.getElementById('statPhones').textContent = '--';
-  document.getElementById('tableContainer').innerHTML = `
-    <div class="empty">
-      <p style="font-size:48px;margin-bottom:12px">🔗</p>
-      <p style="font-size:18px;font-weight:700;margin-bottom:8px">管理后台需要后端服务器</p>
-      ${linkHTML}
-    </div>`;
-}
+function loadStats() {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('statTotal').textContent = records.length;
+  document.getElementById('statToday').textContent = records.filter(r => r.createdAt && r.createdAt.slice(0,10) === today).length;
+  document.getElementById('statPhones').textContent = new Set(records.map(r => r.phone)).size;
 }
 
 function updateStats() {
@@ -197,6 +169,7 @@ function updateStats() {
   document.getElementById('statPhones').textContent = new Set(records.map(r => r.phone)).size;
 }
 
+// ===================== TABLE =====================
 function renderTable() {
   const search = document.getElementById('searchInput').value.trim();
   let filtered = records;
@@ -269,24 +242,19 @@ function toggleDetail(i, btn) {
   }
 }
 
+// ===================== DELETE =====================
 async function deleteRecord(id, btn) {
   if (!confirm('确定删除这条记录吗？此操作不可撤销。')) return;
   try {
-    const resp = await fetch('/api/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    });
-    const result = await resp.json();
-    if (result.ok) {
-      btn.closest('tr').remove();
-      loadData();
-    }
+    await db.collection(COLLECTION).doc(id).delete();
+    btn.closest('tr').remove();
+    loadData();
   } catch(e) {
     alert('删除失败：' + e.message);
   }
 }
 
+// ===================== EXPORT =====================
 function exportCSV() {
   const headers = ['时间','猫咪名字','手机号','年龄','体重','性别','绝育','猫粮品牌','湿粮','喂食频率','饮水量','症状','病史','目标','ID'];
   const rows = records.map(r => [
@@ -312,7 +280,6 @@ function exportCSV() {
 
 function esc(s) { return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-loadStats();
 loadData();
 </script>
 </body>

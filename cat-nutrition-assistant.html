@@ -752,6 +752,8 @@
     .option-row { flex-direction: column; }
   }
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -1182,6 +1184,20 @@
 </div>
 
 <script>
+// ===================== FIREBASE CONFIG =====================
+// 替换为你的 Firebase 配置（从 Firebase 控制台 → 项目设置 → 添加应用 获取）
+const firebaseConfig = {
+  apiKey: "AIzaSyA6AaOEtlsM64W17RgbVwJ9MHG0auFjbmg",
+  authDomain: "pet-health-survey-6f2a1.firebaseapp.com",
+  projectId: "pet-health-survey-6f2a1",
+  storageBucket: "pet-health-survey-6f2a1.firebasestorage.app",
+  messagingSenderId: "564701938024",
+  appId: "1:564701938024:web:2173bc15592c0991db96dd"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
 // ===================== STATE =====================
 const state = {
   currentStep: 1,
@@ -1695,16 +1711,12 @@ function saveRecordToServer() {
     healthIssues: d.healthIssues,
     medicalHistory: d.medicalHistory,
     goal: d.goal,
-    timestamp: new Date().toISOString()
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
-  fetch('/api/save', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(record)
-  }).then(r => r.json()).then(resp => {
-    console.log('Record saved:', resp.id);
+  db.collection('records').add(record).then(docRef => {
+    console.log('Firebase saved:', docRef.id);
   }).catch(err => {
-    console.error('Save failed (offline mode, data not stored):', err.message);
+    console.error('Firebase save failed:', err.message);
   });
 }
 
