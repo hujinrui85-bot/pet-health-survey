@@ -151,7 +151,7 @@ async function loadData() {
     updateStats();
     renderTable();
   } catch(e) {
-    document.getElementById('tableContainer').innerHTML = '<div class="empty">❌ 加载失败，请检查 Firebase 配置是否正确</div>';
+    document.getElementById('tableContainer').innerHTML = '<div class="empty">❌ 加载失败<br><small style="color:#E74C3C">' + e.message + '</small><br><small style="color:#8B6F5C">请确认：<br>1. Firestore 规则已发布<br>2. API Key 无限制</small></div>';
   }
 }
 
