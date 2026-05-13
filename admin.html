@@ -118,13 +118,35 @@ const histLabels = {
   nephritis:'肾炎',ringworm:'猫藓'
 };
 
-const TUNNEL_URL = 'https://2af695ea6341a5.lhr.life';
+// Try the current page's origin first, then common tunnel patterns
+async function getTunnelBase() {
+  // If we're already on the tunnel, use it
+  if (window.location.hostname.endsWith('.lhr.life') ||
+      window.location.hostname.includes('pinggy') ||
+      window.location.hostname.includes('localhost')) {
+    return window.location.origin;
+  }
+  // On GitHub Pages - try to detect live tunnel
+  try {
+    // Try the most recent tunnel from localStorage
+    const cached = localStorage.getItem('last_tunnel_url');
+    if (cached) {
+      const resp = await fetch(cached + '/api/stats', { signal: AbortSignal.timeout(3000) });
+      if (resp.ok) return cached;
+    }
+  } catch(e) {}
+  return null;
+}
 
 async function loadData() {
   try {
     const resp = await fetch('/api/records');
     if (!resp.ok) throw new Error('API unavailable');
     records = await resp.json();
+    // Remember this working tunnel URL
+    if (window.location.hostname.endsWith('.lhr.life') || window.location.hostname.includes('pinggy')) {
+      localStorage.setItem('last_tunnel_url', window.location.origin);
+    }
     document.getElementById('tableContainer').classList.remove('offline');
     updateStats();
     renderTable();
@@ -144,16 +166,26 @@ async function loadStats() {
 }
 
 function showOffline() {
+  // Save current tunnel URL for future use
+  if (window.location.hostname.endsWith('.lhr.life') || window.location.hostname.includes('pinggy')) {
+    localStorage.setItem('last_tunnel_url', window.location.origin);
+  }
+
+  const cached = localStorage.getItem('last_tunnel_url');
+  const linkHTML = cached
+    ? `<a href="${cached}/admin" style="display:inline-block;padding:12px 24px;background:#FF6B35;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px">👉 ${cached}/admin</a>
+       <p style="color:#8B6F5C;margin-top:8px;font-size:12px">（上次成功访问的地址，点击尝试）</p>`
+    : `<p style="color:#8B6F5C;margin-bottom:8px">请在电脑上运行 <b>start-server.bat</b> 启动服务器</p>
+       <p style="color:#8B6F5C;font-size:13px">启动后终端窗口会显示隧道地址</p>`;
+
   document.getElementById('statTotal').textContent = '--';
   document.getElementById('statToday').textContent = '--';
   document.getElementById('statPhones').textContent = '--';
   document.getElementById('tableContainer').innerHTML = `
     <div class="empty">
       <p style="font-size:48px;margin-bottom:12px">🔗</p>
-      <p style="font-size:18px;font-weight:700;margin-bottom:8px">当前为静态页面，无法加载数据</p>
-      <p style="color:#8B6F5C;margin-bottom:16px">记录管理需要后端 API 支持，请通过以下地址访问：</p>
-      <a href="${TUNNEL_URL}/admin" style="display:inline-block;padding:12px 24px;background:#FF6B35;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px">👉 ${TUNNEL_URL}/admin</a>
-      <p style="color:#8B6F5C;margin-top:12px;font-size:13px">点击上方链接即可进入完整管理后台</p>
+      <p style="font-size:18px;font-weight:700;margin-bottom:8px">管理后台需要后端服务器</p>
+      ${linkHTML}
     </div>`;
 }
 }

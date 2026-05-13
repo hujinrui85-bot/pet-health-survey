@@ -1837,6 +1837,11 @@ document.addEventListener('keydown', function(e) {
   const loc = window.location;
   let pageUrl = loc.href;
 
+  // Cache tunnel URL for admin page
+  if (loc.hostname.endsWith('.lhr.life') || loc.hostname.includes('pinggy')) {
+    localStorage.setItem('last_tunnel_url', loc.origin);
+  }
+
   // If opened locally (file://), use the server URL
   if (loc.protocol === 'file:') {
     pageUrl = 'https://2af695ea6341a5.lhr.life/cat-nutrition-assistant.html';
