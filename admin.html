@@ -118,14 +118,18 @@ const histLabels = {
   nephritis:'肾炎',ringworm:'猫藓'
 };
 
+const TUNNEL_URL = 'https://e2d308a0e54ef2.lhr.life';
+
 async function loadData() {
   try {
     const resp = await fetch('/api/records');
+    if (!resp.ok) throw new Error('API unavailable');
     records = await resp.json();
+    document.getElementById('tableContainer').classList.remove('offline');
     updateStats();
     renderTable();
   } catch(e) {
-    document.getElementById('tableContainer').innerHTML = '<div class="empty">❌ 加载失败，请确认服务器正在运行</div>';
+    showOffline();
   }
 }
 
@@ -136,7 +140,22 @@ async function loadStats() {
     document.getElementById('statTotal').textContent = stats.total;
     document.getElementById('statToday').textContent = stats.today;
     document.getElementById('statPhones').textContent = stats.phones;
-  } catch(e) {}
+  } catch(e) { showOffline(); }
+}
+
+function showOffline() {
+  document.getElementById('statTotal').textContent = '--';
+  document.getElementById('statToday').textContent = '--';
+  document.getElementById('statPhones').textContent = '--';
+  document.getElementById('tableContainer').innerHTML = `
+    <div class="empty">
+      <p style="font-size:48px;margin-bottom:12px">🔗</p>
+      <p style="font-size:18px;font-weight:700;margin-bottom:8px">当前为静态页面，无法加载数据</p>
+      <p style="color:#8B6F5C;margin-bottom:16px">记录管理需要后端 API 支持，请通过以下地址访问：</p>
+      <a href="${TUNNEL_URL}/admin" style="display:inline-block;padding:12px 24px;background:#FF6B35;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px">👉 ${TUNNEL_URL}/admin</a>
+      <p style="color:#8B6F5C;margin-top:12px;font-size:13px">点击上方链接即可进入完整管理后台</p>
+    </div>`;
+}
 }
 
 function updateStats() {
