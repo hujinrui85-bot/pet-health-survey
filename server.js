@@ -92,6 +92,22 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // === API: Delete record ===
+  if (pathname === '/api/delete' && req.method === 'POST') {
+    try {
+      const body = await readBody(req);
+      const { id } = JSON.parse(body);
+      let records = loadRecords();
+      const before = records.length;
+      records = records.filter(r => r.id !== id);
+      saveRecords(records);
+      jsonResponse(res, 200, { ok: true, deleted: before - records.length });
+    } catch(e) {
+      jsonResponse(res, 400, { ok: false, error: e.message });
+    }
+    return;
+  }
+
   // === API: Stats ===
   if (pathname === '/api/stats' && req.method === 'GET') {
     const records = loadRecords();

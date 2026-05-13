@@ -809,6 +809,27 @@
       </div>
 
       <div class="form-group">
+        <label class="form-label">猫咪名字 <span class="hint">（选填）</span></label>
+        <input type="text" class="form-input" id="catName" placeholder="例如：咪咪、汤圆" maxlength="20">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">性别 <span class="required">*</span></label>
+        <div class="option-row" id="genderGroup">
+          <div class="option-item" data-value="male">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">♂️</span>
+            <span class="option-text">公猫</span>
+          </div>
+          <div class="option-item" data-value="female">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">♀️</span>
+            <span class="option-text">母猫</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
         <label class="form-label">是否绝育 <span class="required">*</span></label>
         <div class="option-row" id="sterilizedGroup">
           <div class="option-item" data-value="yes">
@@ -887,13 +908,34 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label class="form-label">每日饮水量</label>
+        <div class="option-row" id="waterGroup">
+          <div class="option-item" data-value="much">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">💧</span>
+            <span class="option-text">喝很多</span>
+          </div>
+          <div class="option-item" data-value="normal">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">💧</span>
+            <span class="option-text">正常</span>
+          </div>
+          <div class="option-item" data-value="little">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">⚠️</span>
+            <span class="option-text">喝很少</span>
+          </div>
+        </div>
+      </div>
+
       <div class="btn-row">
         <button class="btn btn-secondary" onclick="prevStep(1)">← 上一步</button>
         <button class="btn btn-primary" onclick="nextStep(3)">下一步 →</button>
       </div>
     </div>
 
-    <!-- Step 3: 健康问题 -->
+    <!-- Step 3: 当前症状 -->
     <div class="form-card" id="step3" style="display:none">
       <div class="step-title">💩 当前症状</div>
       <div class="step-desc">选填，可多选（跳过表示猫咪无明显症状）</div>
@@ -923,6 +965,11 @@
           <div class="checkbox-box"></div>
           <span class="option-emoji">😷</span>
           <span class="option-text">口臭</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="vomiting">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🤮</span>
+          <span class="option-text">呕吐</span>
         </div>
       </div>
 
@@ -1138,13 +1185,16 @@
 // ===================== STATE =====================
 const state = {
   currentStep: 1,
+  catName: '',
   age: null,
   weight: null,
+  gender: null,
   sterilized: null,
   phone: '',
   brand: '',
   wetFood: null,
   feedFreq: null,
+  water: null,
   healthIssues: [],
   medicalHistory: [],
   goal: null
@@ -1177,13 +1227,79 @@ function showStep(n) {
 function nextStep(n) {
   if (!validateStep(state.currentStep)) return;
   collectStepData(state.currentStep);
+  autoSave();
   showStep(n);
 }
 
 function prevStep(n) {
   collectStepData(state.currentStep);
+  autoSave();
   showStep(n);
 }
+
+// Auto-save to localStorage
+function autoSave() {
+  try {
+    localStorage.setItem('cat_health_draft', JSON.stringify(state));
+  } catch(e) { /* quota exceeded, ignore */ }
+}
+
+function loadDraft() {
+  try {
+    const draft = localStorage.getItem('cat_health_draft');
+    if (draft) {
+      const saved = JSON.parse(draft);
+      Object.keys(saved).forEach(k => {
+        if (k in state && k !== 'currentStep') state[k] = saved[k];
+      });
+      restoreFormUI();
+    }
+  } catch(e) { /* ignore */ }
+}
+
+function clearDraft() {
+  localStorage.removeItem('cat_health_draft');
+}
+
+function restoreFormUI() {
+  // Restore step 1
+  if (state.catName) document.getElementById('catName').value = state.catName;
+  if (state.age) document.getElementById('age').value = state.age;
+  if (state.weight) document.getElementById('weight').value = state.weight;
+  if (state.gender) selectOption('genderGroup', state.gender);
+  if (state.sterilized) selectOption('sterilizedGroup', state.sterilized);
+  if (state.phone) document.getElementById('phone').value = state.phone;
+  // Restore step 2
+  if (state.brand) document.getElementById('brand').value = state.brand;
+  if (state.wetFood) selectOption('wetFoodGroup', state.wetFood);
+  if (state.feedFreq) selectOption('feedFreqGroup', state.feedFreq);
+  if (state.water) selectOption('waterGroup', state.water);
+  // Restore step 3
+  restoreCheckboxes('healthGroup', state.healthIssues);
+  // Restore step 4
+  restoreCheckboxes('medicalGroup', state.medicalHistory);
+  // Restore step 5
+  if (state.goal) selectOption('goalGroup', state.goal);
+}
+
+function selectOption(groupId, value) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  group.querySelectorAll('.option-item').forEach(el => {
+    el.classList.toggle('selected', el.dataset.value === value);
+  });
+}
+
+function restoreCheckboxes(groupId, values) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  group.querySelectorAll('.checkbox-item').forEach(el => {
+    el.classList.toggle('selected', values.includes(el.dataset.value));
+  });
+}
+
+// Load draft on startup
+loadDraft();
 
 // ===================== VALIDATION =====================
 function validateStep(step) {
@@ -1199,6 +1315,10 @@ function validateStep(step) {
     if (!weight || weight <= 0 || weight > 15) {
       shakeElement(document.getElementById('weight'));
       alert('请输入有效的猫咪体重（0.5-15kg）');
+      return false;
+    }
+    if (!document.getElementById('genderGroup').querySelector('.selected')) {
+      alert('请选择猫咪性别');
       return false;
     }
     if (!sterilized) {
@@ -1259,8 +1379,10 @@ function getSelectedCheckboxes(groupId) {
 
 function collectStepData(step) {
   if (step === 1) {
+    state.catName = document.getElementById('catName').value.trim();
     state.age = parseFloat(document.getElementById('age').value);
     state.weight = parseFloat(document.getElementById('weight').value);
+    state.gender = getSelectedRadio('genderGroup');
     state.sterilized = getSelectedRadio('sterilizedGroup');
     state.phone = document.getElementById('phone').value.trim();
   }
@@ -1268,6 +1390,7 @@ function collectStepData(step) {
     state.brand = document.getElementById('brand').value.trim();
     state.wetFood = getSelectedRadio('wetFoodGroup');
     state.feedFreq = getSelectedRadio('feedFreqGroup');
+    state.water = getSelectedRadio('waterGroup');
   }
   if (step === 3) {
     state.healthIssues = getSelectedCheckboxes('healthGroup');
@@ -1448,7 +1571,7 @@ function buildAIPrompt(d) {
   };
   const issueLabels = {
     soft_stool: '软便/拉稀', picky: '挑食', urinary: '泌尿问题',
-    shedding: '掉毛严重', bad_breath: '口臭'
+    shedding: '掉毛严重', bad_breath: '口臭', vomiting: '呕吐'
   };
   const goalLabels = {
     gut: '调理肠胃', coat: '改善毛发', gain: '增肥', lose: '减肥',
@@ -1460,14 +1583,17 @@ function buildAIPrompt(d) {
   return `请根据以下猫咪健康问卷数据，生成一份全面的健康评估报告：
 
 【基本信息】
+- 猫咪名字：${d.catName || '未取名'}
 - 年龄：${d.age} 岁（${ageCat.label}）
 - 体重：${d.weight} kg（${ws.status}）
+- 性别：${d.gender === 'male' ? '公猫' : '母猫'}
 - 是否绝育：${d.sterilized === 'yes' ? '已绝育' : '未绝育'}
 
 【饮食情况】
 - 当前猫粮品牌：${d.brand || '未填写'}
 - 湿粮/冻干摄入：${d.wetFood === 'regular' ? '经常吃' : d.wetFood === 'sometimes' ? '偶尔吃' : '只吃干粮'}
 - 喂食频率：${d.feedFreq === 'free' ? '自助进食' : d.feedFreq === '2' ? '每天2次' : d.feedFreq === '3' ? '每天3次及以上' : '未填写'}
+- 每日饮水量：${d.water === 'much' ? '喝很多' : d.water === 'normal' ? '正常' : d.water === 'little' ? '喝很少' : '未填写'}
 
 【当前症状】
 ${d.healthIssues.length > 0 ? d.healthIssues.map(h => '- ' + (issueLabels[h] || h)).join('\n') : '无明显症状'}
@@ -1548,6 +1674,7 @@ function showReportResult(reportHTML, overlay) {
   overlay.classList.remove('show');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   showPrivacyOverlay();
+  clearDraft();
   // Save to server in background
   saveRecordToServer();
 }
@@ -1556,12 +1683,15 @@ function saveRecordToServer() {
   const d = state;
   const record = {
     phone: d.phone,
+    catName: d.catName,
     age: d.age,
     weight: d.weight,
+    gender: d.gender,
     sterilized: d.sterilized,
     brand: d.brand,
     wetFood: d.wetFood,
     feedFreq: d.feedFreq,
+    water: d.water,
     healthIssues: d.healthIssues,
     medicalHistory: d.medicalHistory,
     goal: d.goal,
@@ -1709,7 +1839,7 @@ document.addEventListener('keydown', function(e) {
 
   // If opened locally (file://), use the server URL
   if (loc.protocol === 'file:') {
-    pageUrl = 'https://2f33eda6be7ed8.lhr.life/cat-nutrition-assistant.html';
+    pageUrl = 'https://e2d308a0e54ef2.lhr.life/cat-nutrition-assistant.html';
   }
 
   // Only show QR button when there's a valid HTTP URL
@@ -1811,6 +1941,7 @@ function calcHealthScore(d) {
   if (issues.includes('bad_breath')) score -= 0.5;
   if (issues.includes('shedding')) score -= 0.5;
   if (issues.includes('picky')) score -= 0.5;
+  if (issues.includes('vomiting')) score -= 1;
   // Medical history deductions
   if (hist.includes('pancreatitis')) score -= 2;
   if (hist.includes('heart')) score -= 2;
@@ -1896,8 +2027,17 @@ function buildRiskAlerts(d, ageCat, weightStatus) {
     risks.push({ level: 'medium', text: '<b>口腔健康风险：</b>口臭通常是牙菌斑、牙结石的早期信号，长期不处理可能发展为牙周病，影响心脏和肾脏。' });
   }
 
+  if (d.healthIssues.includes('vomiting')) {
+    risks.push({ level: 'medium', text: '<b>呕吐风险：</b>猫咪频繁呕吐可能由多种原因引起：毛球、食物过敏、进食过快、胃肠炎、胰腺炎、异物等。若每周呕吐超过1-2次，建议就医排查。' });
+  }
   if (d.healthIssues.includes('shedding') && d.healthIssues.includes('picky')) {
     risks.push({ level: 'medium', text: '<b>营养缺乏叠加风险：</b>掉毛严重+挑食的组合提示可能存在蛋白质或必需脂肪酸摄入不足，长期可能导致皮肤屏障功能下降。' });
+  }
+  if (d.water === 'little') {
+    risks.push({ level: 'high', text: '<b>饮水不足风险：</b>猫咪喝水量明显偏少，这是泌尿系统疾病（FLUTD、结晶、尿闭）和肾脏问题的重要诱因。尤其公猫尿道狭窄，风险更高。' });
+  }
+  if (d.water === 'little' && d.gender === 'male') {
+    risks.push({ level: 'high', text: '<b>公猫+饮水少（高危组合）：</b>公猫尿道细长弯曲，本就易发尿闭，加上饮水量少，结晶和堵塞风险远高于母猫。必须立即增加水分摄入。' });
   }
 
   // Medical history risks
@@ -1993,6 +2133,19 @@ function buildDietIssues(d, ageCat, weightStatus) {
 
   if (d.healthIssues.includes('urinary') && d.wetFood === 'no') {
     issues.push('<b>泌尿问题+只吃干粮：</b>这是最常见的泌尿问题诱因组合。强烈建议增加湿粮比例，或使用泌尿专用处方粮。');
+  }
+  if (d.healthIssues.includes('vomiting') && d.feedFreq === 'free') {
+    issues.push('<b>呕吐+自助进食：</b>自助进食可能导致进食过快或过量而引发呕吐。建议改为定时定量（每天2-3次），控制单次进食量。');
+  }
+  if (d.healthIssues.includes('vomiting') && d.healthIssues.includes('soft_stool')) {
+    issues.push('<b>呕吐+软便双重消化问题：</b>上下消化道同时出现症状，需高度怀疑食物过敏或IBD（炎性肠病）。建议做食物排查和兽医检查。');
+  }
+
+  // Water intake analysis
+  if (d.water === 'little') {
+    issues.push('<b>饮水量明显不足：</b>猫咪每日需摄入 40-60ml/kg 水分（含食物中的水）。以${d.weight}kg计算，约需${Math.round(d.weight * 40)}-${Math.round(d.weight * 60)}ml/天。干粮含水量仅10%，远不能满足。');
+  } else if (d.water === 'much') {
+    issues.push('<b>饮水量偏多：</b>猫咪通常渴感不强，如果突然喝水量大增，需警惕糖尿病、肾病或甲状腺功能亢进等疾病，建议做血液生化检查。');
   }
 
   // Cross-reference with goals
@@ -2112,6 +2265,10 @@ function buildNutritionAdvice(d, ageCat, weightStatus) {
   // Picky eating
   if (d.healthIssues.includes('picky')) {
     advices.push({ text: '<b>应对挑食：</b>不要频繁更换食物（会强化挑食行为）。定时定量喂食，15分钟不吃就收走。可轻微加热湿粮（~38°C）增加香气释放。尝试不同蛋白来源（兔肉、鹿肉等新蛋白质）。', tags: ['挑食', '行为纠正'] });
+  }
+  // Vomiting
+  if (d.healthIssues.includes('vomiting')) {
+    advices.push({ text: '<b>呕吐排查与管理：</b>先区分是毛球性呕吐（含毛团）还是食物性呕吐。定期化毛（猫草/化毛膏），改用慢食碗减缓进食速度。如呕吐物含血丝或呈咖啡色，立即就医。', tags: ['呕吐', '化毛', '慢食'] });
   }
 
   // Senior specific
