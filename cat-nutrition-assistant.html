@@ -1,0 +1,2280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宠物健康综合问卷调查 🐱</title>
+<style>
+  :root {
+    --orange: #FF6B35;
+    --orange-light: #FF8C5A;
+    --orange-bg: #FFF5E6;
+    --teal: #4ECDC4;
+    --red: #E74C3C;
+    --yellow: #F39C12;
+    --green: #27AE60;
+    --text: #2D1B0E;
+    --text-light: #8B6F5C;
+    --card: #FFFFFF;
+    --bg: #FEF9F3;
+    --border: #E8D5C4;
+    --shadow: 0 4px 20px rgba(0,0,0,0.06);
+    --radius: 16px;
+    --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============ CONTAINER ============ */
+  .app-container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ============ HEADER ============ */
+  .app-header {
+    text-align: center;
+    padding: 32px 0 24px;
+  }
+  .app-header .logo {
+    font-size: 56px;
+    display: block;
+    margin-bottom: 8px;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  .app-header h1 {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 1px;
+  }
+  .app-header .sub {
+    font-size: 15px;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+  .app-header {
+    position: relative;
+  }
+  .settings-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s;
+    color: var(--text-light);
+  }
+  .settings-btn:hover { transform: rotate(60deg); }
+  .settings-btn.has-key {
+    border-color: var(--green);
+    color: var(--green);
+    background: #E8F8E8;
+  }
+
+  /* ============ SETTINGS MODAL ============ */
+  .settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 300;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .settings-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .settings-modal {
+    background: #fff;
+    border-radius: 20px;
+    padding: 32px 28px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .settings-modal h3 {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .settings-modal .modal-desc {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 20px;
+  }
+  .settings-modal .provider-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .settings-modal .provider-tab {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    font-family: inherit;
+    transition: var(--transition);
+  }
+  .settings-modal .provider-tab.active {
+    border-color: var(--orange);
+    background: var(--orange-bg);
+    color: var(--orange);
+  }
+  .settings-modal label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .settings-modal .api-key-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: monospace;
+    outline: none;
+    transition: var(--transition);
+  }
+  .settings-modal .api-key-input:focus {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.08);
+  }
+  .settings-modal .api-status {
+    font-size: 12px;
+    margin-top: 6px;
+    min-height: 18px;
+  }
+  .settings-modal .api-status.ok { color: var(--green); }
+  .settings-modal .api-status.warn { color: var(--yellow); }
+  .settings-modal .btn-row { margin-top: 16px; }
+  .settings-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .settings-badge.on { background: #E8F8E8; color: #27AE60; }
+  .settings-badge.off { background: #FFF0F0; color: #E74C3C; }
+
+  /* ============ STEP INDICATOR ============ */
+  .step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .step-dot {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-light);
+    transition: var(--transition);
+    position: relative;
+  }
+  .step-dot.active {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(255,107,53,0.3);
+  }
+  .step-dot.done {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+  .step-connector {
+    width: 32px;
+    height: 2px;
+    background: var(--border);
+    align-self: center;
+    transition: var(--transition);
+  }
+  .step-connector.done {
+    background: var(--green);
+  }
+
+  /* ============ FORM CARD ============ */
+  .form-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: var(--transition);
+  }
+
+  .step-title {
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .step-desc {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 24px;
+  }
+
+  /* ============ FORM ELEMENTS ============ */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group:last-child { margin-bottom: 0; }
+
+  .form-label {
+    display: block;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .form-label .required {
+    color: var(--red);
+    margin-left: 2px;
+  }
+  .form-label .hint {
+    font-weight: 400;
+    color: var(--text-light);
+    font-size: 13px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--text);
+    background: #FAFAFA;
+    transition: var(--transition);
+    outline: none;
+  }
+  .form-input:focus {
+    border-color: var(--orange);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+  }
+  .form-input::placeholder { color: #C4B5A5; }
+
+  .input-with-unit {
+    display: flex;
+    gap: 10px;
+  }
+  .input-with-unit .form-input { flex: 1; }
+  .input-with-unit .unit {
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    background: var(--orange-bg);
+    border-radius: 12px;
+    font-weight: 700;
+    color: var(--orange);
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  /* Radio / Checkbox */
+  .option-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .option-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .option-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    background: #FAFAFA;
+    user-select: none;
+    flex: 1;
+    min-width: 0;
+  }
+  .option-item:hover {
+    border-color: var(--orange-light);
+    background: #FFF9F5;
+  }
+  .option-item.selected {
+    border-color: var(--orange);
+    background: var(--orange-bg);
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.08);
+  }
+  .option-item .radio-dot {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+  .option-item.selected .radio-dot {
+    border-color: var(--orange);
+    background: var(--orange);
+  }
+  .option-item.selected .radio-dot::after {
+    content: '';
+    width: 6px; height: 6px;
+    background: #fff;
+    border-radius: 50%;
+  }
+  .option-item .checkbox-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+  }
+  .option-item.selected .checkbox-box {
+    border-color: var(--orange);
+    background: var(--orange);
+  }
+  .option-item.selected .checkbox-box::after {
+    content: '✓';
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .option-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .option-emoji {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  /* ============ BUTTONS ============ */
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+  }
+  .btn {
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    transition: var(--transition);
+    letter-spacing: 0.5px;
+  }
+  .btn-primary {
+    flex: 1;
+    background: linear-gradient(135deg, var(--orange) 0%, var(--orange-light) 100%);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(255,107,53,0.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255,107,53,0.35);
+  }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-secondary {
+    background: #fff;
+    color: var(--text-light);
+    border: 2px solid var(--border);
+  }
+  .btn-secondary:hover {
+    border-color: var(--orange-light);
+    color: var(--orange);
+  }
+
+  /* ============ LOADING OVERLAY ============ */
+  .loading-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s;
+  }
+  .loading-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .loading-cat {
+    font-size: 64px;
+    animation: spin 1s infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+    100% { transform: rotate(0deg); }
+  }
+  .loading-text {
+    margin-top: 16px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 1px;
+  }
+  .loading-dot {
+    display: inline-block;
+    animation: dotBounce 1.4s infinite;
+  }
+  .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotBounce {
+    0%, 80%, 100% { opacity: 0; transform: translateY(0); }
+    40% { opacity: 1; transform: translateY(-4px); }
+  }
+
+  /* ============ PRIVACY OVERLAY ============ */
+  .privacy-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 20, 10, 0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .privacy-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .privacy-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px 32px;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: slideUp 0.4s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .privacy-card .lock-icon {
+    font-size: 56px;
+    display: block;
+    margin-bottom: 12px;
+  }
+  .privacy-card h3 {
+    font-size: 20px;
+    font-weight: 800;
+    color: #2D1B0E;
+    margin-bottom: 6px;
+  }
+  .privacy-card .privacy-hint {
+    font-size: 13px;
+    color: #8B6F5C;
+    margin-bottom: 20px;
+  }
+  .privacy-card .pin-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #E8D5C4;
+    border-radius: 12px;
+    font-size: 24px;
+    text-align: center;
+    letter-spacing: 8px;
+    font-family: inherit;
+    color: #2D1B0E;
+    background: #FAFAFA;
+    outline: none;
+    transition: border-color 0.3s;
+    -webkit-text-security: disc;
+  }
+  .privacy-card .pin-input:focus {
+    border-color: #FF6B35;
+    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
+  }
+  .privacy-card .pin-error {
+    color: #E74C3C;
+    font-size: 13px;
+    margin-top: 8px;
+    min-height: 20px;
+    font-weight: 600;
+  }
+  .privacy-card .pin-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+  }
+  .privacy-card .pin-btns .btn {
+    flex: 1;
+    padding: 12px;
+    font-size: 15px;
+  }
+  .privacy-card .attempt-warn {
+    color: #F39C12;
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .report-lock-btn {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #E8D5C4;
+    font-size: 20px;
+    cursor: pointer;
+    z-index: 50;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s;
+    display: none;
+  }
+  .report-lock-btn:hover { transform: scale(1.1); }
+
+  /* ============ REPORT PAGE ============ */
+  #report-page {
+    /* display toggled via JS inline style */
+  }
+
+  .report-header {
+    text-align: center;
+    padding: 10px 0 20px;
+  }
+  .report-header .cat-avatar {
+    font-size: 64px;
+    display: block;
+  }
+  .report-header h2 {
+    font-size: 24px;
+    font-weight: 900;
+    margin-top: 8px;
+  }
+  .report-header .date {
+    font-size: 13px;
+    color: var(--text-light);
+  }
+
+  /* Score gauge */
+  .score-section {
+    text-align: center;
+    padding: 20px 0;
+  }
+  .score-ring {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    position: relative;
+  }
+  .score-ring.good { background: linear-gradient(135deg, #27AE60, #2ECC71); }
+  .score-ring.warning { background: linear-gradient(135deg, #F39C12, #F1C40F); }
+  .score-ring.danger { background: linear-gradient(135deg, #E74C3C, #EC7063); }
+  .score-label {
+    font-size: 14px;
+    color: var(--text-light);
+    font-weight: 600;
+  }
+
+  /* Report sections */
+  .report-section {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .report-section-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--orange-bg);
+  }
+  .report-section-icon {
+    font-size: 28px;
+  }
+  .report-section-title {
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .report-section .item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  .report-section .item:last-child { margin-bottom: 0; }
+  .report-section .item-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+  .report-section .item-text {
+    color: #3D2B1A;
+  }
+  .highlight-text {
+    background: linear-gradient(180deg, transparent 60%, rgba(255,107,53,0.2) 60%);
+    padding: 0 2px;
+    font-weight: 700;
+  }
+  .risk-item {
+    padding: 12px 16px;
+    background: #FFF5F5;
+    border-left: 4px solid var(--red);
+    border-radius: 0 12px 12px 0;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  .risk-item.medium {
+    background: #FFFBF0;
+    border-left-color: var(--yellow);
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .tag.orange { background: var(--orange-bg); color: var(--orange); }
+  .tag.teal { background: #E8FAF8; color: #16A085; }
+  .tag.green { background: #E8F8E8; color: #27AE60; }
+  .tag.red { background: #FFF0F0; color: #E74C3C; }
+
+  /* Report actions */
+  .report-actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px 0;
+  }
+
+  /* ============ PRINT ============ */
+  @media print {
+    body { background: #fff; }
+    .app-header, .step-indicator, .report-actions, .btn-row { display: none !important; }
+    .report-section { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+    .app-container { max-width: 100%; padding: 0; }
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 480px) {
+    .app-container { padding: 12px 10px 30px; }
+    .form-card { padding: 20px 16px; }
+    .option-item { padding: 12px 14px; }
+    .option-text { font-size: 14px; }
+    .app-header h1 { font-size: 24px; }
+    .option-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-container" id="app">
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <button class="settings-btn" id="settingsBtn" onclick="openSettings()" title="API 设置">⚙️</button>
+    <span class="logo">🐱</span>
+    <h1>宠物健康综合问卷调查 <span class="settings-badge off" id="apiBadge">规则引擎</span></h1>
+    <p class="sub">全面评估 · 健康管理 · 风险预警</p>
+    <div id="qrToggle" style="margin-top:12px;display:none">
+      <button class="btn btn-secondary" onclick="toggleQR()" style="font-size:13px;padding:6px 16px">📱 手机扫码打开</button>
+    </div>
+    <div id="qrBox" style="display:none;margin-top:8px;padding:12px;background:#fff;border-radius:12px;border:1px solid var(--border)">
+      <img id="qrImage" src="" alt="QR Code" style="width:160px;height:160px;display:block;margin:0 auto">
+      <p id="qrUrl" style="font-size:12px;color:var(--text-light);text-align:center;margin-top:8px;word-break:break-all"></p>
+    </div>
+  </div>
+
+  <!-- STEP INDICATOR -->
+  <div class="step-indicator" id="stepIndicator">
+    <div class="step-dot active" data-step="1">1</div>
+    <div class="step-connector"></div>
+    <div class="step-dot" data-step="2">2</div>
+    <div class="step-connector"></div>
+    <div class="step-dot" data-step="3">3</div>
+    <div class="step-connector"></div>
+    <div class="step-dot" data-step="4">4</div>
+    <div class="step-connector"></div>
+    <div class="step-dot" data-step="5">5</div>
+  </div>
+
+  <!-- ==================== FORM PAGE ==================== -->
+  <div id="form-page">
+    <!-- Step 1: 基本信息 -->
+    <div class="form-card" id="step1">
+      <div class="step-title">🐱 基本信息</div>
+      <div class="step-desc">了解你的猫咪基本情况</div>
+
+      <div class="form-group">
+        <label class="form-label">年龄 <span class="required">*</span> <span class="hint">（岁）</span></label>
+        <div class="input-with-unit">
+          <input type="number" class="form-input" id="age" placeholder="例如：2.5" min="0" max="25" step="0.5">
+          <span class="unit">岁</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">体重 <span class="required">*</span> <span class="hint">（公斤）</span></label>
+        <div class="input-with-unit">
+          <input type="number" class="form-input" id="weight" placeholder="例如：4.2" min="0.5" max="15" step="0.1">
+          <span class="unit">kg</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">是否绝育 <span class="required">*</span></label>
+        <div class="option-row" id="sterilizedGroup">
+          <div class="option-item" data-value="yes">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🏥</span>
+            <span class="option-text">已绝育</span>
+          </div>
+          <div class="option-item" data-value="no">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🐱</span>
+            <span class="option-text">未绝育</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">手机号 <span class="required">*</span> <span class="hint">（用于记录和回访）</span></label>
+        <input type="tel" class="form-input" id="phone" placeholder="请输入手机号码" maxlength="11" autocomplete="tel">
+      </div>
+
+      <div class="btn-row">
+        <div style="flex:1"></div>
+        <button class="btn btn-primary" onclick="nextStep(2)">下一步 →</button>
+      </div>
+    </div>
+
+    <!-- Step 2: 饮食情况 -->
+    <div class="form-card" id="step2" style="display:none">
+      <div class="step-title">🍗 饮食情况</div>
+      <div class="step-desc">了解猫咪目前的饮食习惯</div>
+
+      <div class="form-group">
+        <label class="form-label">当前猫粮品牌 <span class="required">*</span></label>
+        <input type="text" class="form-input" id="brand" placeholder="例如：皇家、渴望、爱肯拿...">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">是否吃湿粮 / 冻干</label>
+        <div class="option-row" id="wetFoodGroup">
+          <div class="option-item" data-value="regular">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🥫</span>
+            <span class="option-text">经常吃</span>
+          </div>
+          <div class="option-item" data-value="sometimes">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🍖</span>
+            <span class="option-text">偶尔吃</span>
+          </div>
+          <div class="option-item" data-value="no">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🍪</span>
+            <span class="option-text">只吃干粮</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">每天喂几次</label>
+        <div class="option-row" id="feedFreqGroup">
+          <div class="option-item" data-value="free">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">⏰</span>
+            <span class="option-text">自助进食</span>
+          </div>
+          <div class="option-item" data-value="2">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🍽️</span>
+            <span class="option-text">2次/天</span>
+          </div>
+          <div class="option-item" data-value="3">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🍽️</span>
+            <span class="option-text">3次及以上</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="prevStep(1)">← 上一步</button>
+        <button class="btn btn-primary" onclick="nextStep(3)">下一步 →</button>
+      </div>
+    </div>
+
+    <!-- Step 3: 健康问题 -->
+    <div class="form-card" id="step3" style="display:none">
+      <div class="step-title">💩 当前症状</div>
+      <div class="step-desc">选填，可多选（跳过表示猫咪无明显症状）</div>
+
+      <div class="option-group" id="healthGroup">
+        <div class="option-item checkbox-item" data-value="soft_stool">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">💩</span>
+          <span class="option-text">软便 / 拉稀</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="picky">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🙄</span>
+          <span class="option-text">挑食</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="urinary">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🚰</span>
+          <span class="option-text">泌尿问题</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="shedding">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🧶</span>
+          <span class="option-text">掉毛严重</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="bad_breath">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">😷</span>
+          <span class="option-text">口臭</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="prevStep(2)">← 上一步</button>
+        <button class="btn btn-primary" onclick="nextStep(4)">下一步 →</button>
+      </div>
+    </div>
+
+    <!-- Step 4: 既往病史 -->
+    <div class="form-card" id="step4" style="display:none">
+      <div class="step-title">🏥 既往病史</div>
+      <div class="step-desc">选填，可多选（猫咪曾经或正在患有的疾病）</div>
+
+      <div class="option-group" id="medicalGroup">
+        <div class="option-item checkbox-item" data-value="pancreatitis">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🫁</span>
+          <span class="option-text">胰腺炎</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="heart">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🫀</span>
+          <span class="option-text">心脏病</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="bone">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🦴</span>
+          <span class="option-text">骨骼疾病</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="ear_mites">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">👂</span>
+          <span class="option-text">耳螨</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="stomatitis">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">👄</span>
+          <span class="option-text">口炎</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="conjunctivitis">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">👁️</span>
+          <span class="option-text">眼炎</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="ascites">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">💧</span>
+          <span class="option-text">腹水</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="urinary_blockage">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🚫</span>
+          <span class="option-text">尿闭</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="hematuria">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🩸</span>
+          <span class="option-text">血尿</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="nephritis">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🫘</span>
+          <span class="option-text">肾炎</span>
+        </div>
+        <div class="option-item checkbox-item" data-value="ringworm">
+          <div class="checkbox-box"></div>
+          <span class="option-emoji">🍄</span>
+          <span class="option-text">猫藓</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="prevStep(3)">← 上一步</button>
+        <button class="btn btn-primary" onclick="nextStep(5)">下一步 →</button>
+      </div>
+    </div>
+
+    <!-- Step 5: 目标 -->
+    <div class="form-card" id="step5" style="display:none">
+      <div class="step-title">🎯 你的目标</div>
+      <div class="step-desc">你最希望改善什么？（单选）</div>
+
+      <div class="option-group" id="goalGroup" style="flex-direction:row;flex-wrap:wrap">
+        <div class="option-item" data-value="gut" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">🫃</span>
+          <span class="option-text">调理肠胃</span>
+        </div>
+        <div class="option-item" data-value="coat" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">✨</span>
+          <span class="option-text">改善毛发</span>
+        </div>
+        <div class="option-item" data-value="gain" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">📈</span>
+          <span class="option-text">增肥</span>
+        </div>
+        <div class="option-item" data-value="lose" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">📉</span>
+          <span class="option-text">减肥</span>
+        </div>
+        <div class="option-item" data-value="pancreas" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">🫁</span>
+          <span class="option-text">胰腺护理</span>
+        </div>
+        <div class="option-item" data-value="heart_care" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">🫀</span>
+          <span class="option-text">心脏护理</span>
+        </div>
+        <div class="option-item" data-value="joint" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">🦴</span>
+          <span class="option-text">关节护理</span>
+        </div>
+        <div class="option-item" data-value="urinary_care" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">💧</span>
+          <span class="option-text">泌尿护理</span>
+        </div>
+        <div class="option-item" data-value="oral" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">👄</span>
+          <span class="option-text">口腔护理</span>
+        </div>
+        <div class="option-item" data-value="skin" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">🧴</span>
+          <span class="option-text">皮肤护理</span>
+        </div>
+        <div class="option-item" data-value="eye" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">👁️</span>
+          <span class="option-text">眼部护理</span>
+        </div>
+        <div class="option-item" data-value="wellness" style="flex:0 0 calc(50% - 5px)">
+          <div class="radio-dot"></div>
+          <span class="option-emoji">🛡️</span>
+          <span class="option-text">日常保健</span>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="prevStep(4)">← 上一步</button>
+        <button class="btn btn-primary" id="submitBtn" onclick="generateReport()">🔍 生成健康报告</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== REPORT PAGE ==================== -->
+  <div id="report-page" style="display:none">
+    <!-- dynamically filled -->
+    <div class="report-actions">
+      <button class="btn btn-secondary" onclick="backToForm()" style="flex:1">← 返回修改</button>
+      <button class="btn btn-primary" onclick="window.print()" style="flex:1">🖨️ 打印报告</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-cat">🐱</div>
+  <p class="loading-text">报告生成中<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span></p>
+</div>
+
+<!-- PRIVACY OVERLAY -->
+<div class="privacy-overlay" id="privacyOverlay">
+  <div class="privacy-card">
+    <span class="lock-icon" id="lockIcon">🔒</span>
+    <h3 id="privacyTitle">设置查看密码</h3>
+    <p class="privacy-hint" id="privacyHint">请设置 4-6 位数字密码，仅本次会话有效</p>
+    <input type="password" class="pin-input" id="pinInput" maxlength="6" placeholder="······" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+    <p class="pin-error" id="pinError"></p>
+    <p class="attempt-warn" id="attemptWarn"></p>
+    <div class="pin-btns">
+      <button class="btn btn-secondary" id="pinCancelBtn" onclick="cancelPrivacy()" style="display:none">取消</button>
+      <button class="btn btn-primary" id="pinConfirmBtn" onclick="handlePinSubmit()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOCK BUTTON -->
+<button class="report-lock-btn" id="reportLockBtn" onclick="lockReport()" title="锁定报告">🔒</button>
+
+<!-- SETTINGS MODAL -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-modal">
+    <h3>⚙️ AI 报告设置</h3>
+    <p class="modal-desc">接入 Claude 或 GPT API 后，将由 AI 实时生成个性化诊断报告，替代内置规则引擎。</p>
+    <div class="provider-tabs" id="providerTabs">
+      <button class="provider-tab active" data-provider="anthropic" onclick="switchProvider('anthropic')">🟠 Claude (Anthropic)</button>
+      <button class="provider-tab" data-provider="openai" onclick="switchProvider('openai')">🟢 GPT (OpenAI)</button>
+    </div>
+    <label id="apiKeyLabel">Anthropic API Key</label>
+    <input type="password" class="api-key-input" id="apiKeyInput" placeholder="sk-ant-... 或 sk-..." autocomplete="off">
+    <p class="api-status" id="apiStatus"></p>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeSettings()" style="flex:1">取消</button>
+      <button class="btn btn-primary" onclick="saveApiKey()" style="flex:1">保存并启用</button>
+    </div>
+    <div class="btn-row" style="margin-top:4px">
+      <button class="btn btn-secondary" onclick="clearApiKey()" style="flex:1;font-size:13px">清除密钥（恢复规则引擎）</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===================== STATE =====================
+const state = {
+  currentStep: 1,
+  age: null,
+  weight: null,
+  sterilized: null,
+  phone: '',
+  brand: '',
+  wetFood: null,
+  feedFreq: null,
+  healthIssues: [],
+  medicalHistory: [],
+  goal: null
+};
+
+// ===================== STEP NAVIGATION =====================
+function updateStepIndicator() {
+  document.querySelectorAll('.step-dot').forEach(dot => {
+    const step = parseInt(dot.dataset.step);
+    dot.classList.remove('active', 'done');
+    if (step === state.currentStep) dot.classList.add('active');
+    else if (step < state.currentStep) dot.classList.add('done');
+  });
+  document.querySelectorAll('.step-connector').forEach((conn, i) => {
+    if (i + 1 < state.currentStep) conn.classList.add('done');
+    else conn.classList.remove('done');
+  });
+}
+
+function showStep(n) {
+  for (let i = 1; i <= 5; i++) {
+    const el = document.getElementById('step' + i);
+    if (el) el.style.display = i === n ? '' : 'none';
+  }
+  state.currentStep = n;
+  updateStepIndicator();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function nextStep(n) {
+  if (!validateStep(state.currentStep)) return;
+  collectStepData(state.currentStep);
+  showStep(n);
+}
+
+function prevStep(n) {
+  collectStepData(state.currentStep);
+  showStep(n);
+}
+
+// ===================== VALIDATION =====================
+function validateStep(step) {
+  if (step === 1) {
+    const age = parseFloat(document.getElementById('age').value);
+    const weight = parseFloat(document.getElementById('weight').value);
+    const sterilized = getSelectedRadio('sterilizedGroup');
+    if (!age || age <= 0 || age > 25) {
+      shakeElement(document.getElementById('age'));
+      alert('请输入有效的猫咪年龄（0-25岁）');
+      return false;
+    }
+    if (!weight || weight <= 0 || weight > 15) {
+      shakeElement(document.getElementById('weight'));
+      alert('请输入有效的猫咪体重（0.5-15kg）');
+      return false;
+    }
+    if (!sterilized) {
+      alert('请选择是否绝育');
+      return false;
+    }
+    const phone = document.getElementById('phone').value.trim();
+    if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
+      shakeElement(document.getElementById('phone'));
+      alert('请输入有效的11位手机号码');
+      return false;
+    }
+    return true;
+  }
+  if (step === 2) {
+    const brand = document.getElementById('brand').value.trim();
+    if (!brand) {
+      shakeElement(document.getElementById('brand'));
+      alert('请输入当前猫粮品牌');
+      return false;
+    }
+    return true;
+  }
+  // Steps 3, 4, and 5 are optional / no strict validation needed
+  return true;
+}
+
+function shakeElement(el) {
+  el.style.animation = 'none';
+  el.offsetHeight;
+  el.style.animation = 'shake 0.4s ease';
+  el.style.borderColor = '#E74C3C';
+  setTimeout(() => { el.style.borderColor = ''; }, 1500);
+}
+
+// Add shake keyframes dynamically
+const shakeStyle = document.createElement('style');
+shakeStyle.textContent = `
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-4px); }
+  }
+`;
+document.head.appendChild(shakeStyle);
+
+// ===================== DATA COLLECTION =====================
+function getSelectedRadio(groupId) {
+  const selected = document.querySelector(`#${groupId} .option-item.selected`);
+  return selected ? selected.dataset.value : null;
+}
+
+function getSelectedCheckboxes(groupId) {
+  return Array.from(document.querySelectorAll(`#${groupId} .checkbox-item.selected`))
+    .map(el => el.dataset.value);
+}
+
+function collectStepData(step) {
+  if (step === 1) {
+    state.age = parseFloat(document.getElementById('age').value);
+    state.weight = parseFloat(document.getElementById('weight').value);
+    state.sterilized = getSelectedRadio('sterilizedGroup');
+    state.phone = document.getElementById('phone').value.trim();
+  }
+  if (step === 2) {
+    state.brand = document.getElementById('brand').value.trim();
+    state.wetFood = getSelectedRadio('wetFoodGroup');
+    state.feedFreq = getSelectedRadio('feedFreqGroup');
+  }
+  if (step === 3) {
+    state.healthIssues = getSelectedCheckboxes('healthGroup');
+  }
+  if (step === 4) {
+    state.medicalHistory = getSelectedCheckboxes('medicalGroup');
+  }
+  if (step === 5) {
+    state.goal = getSelectedRadio('goalGroup');
+  }
+}
+
+// ===================== RADIO / CHECKBOX UI =====================
+document.addEventListener('click', function(e) {
+  const item = e.target.closest('.option-item');
+  if (!item) return;
+
+  const parent = item.parentElement;
+  const isCheckbox = item.classList.contains('checkbox-item');
+
+  if (isCheckbox) {
+    item.classList.toggle('selected');
+  } else {
+    // Radio: deselect siblings
+    parent.querySelectorAll('.option-item').forEach(s => s.classList.remove('selected'));
+    item.classList.add('selected');
+  }
+});
+
+// ===================== API SETTINGS =====================
+const API_CONFIG_KEY = 'cat_health_api_config';
+let apiConfig = { provider: 'anthropic', key: '' };
+
+function loadApiConfig() {
+  try {
+    const saved = localStorage.getItem(API_CONFIG_KEY);
+    if (saved) { apiConfig = JSON.parse(saved); }
+  } catch(e) { /* ignore */ }
+  updateApiBadge();
+}
+loadApiConfig();
+
+function updateApiBadge() {
+  const badge = document.getElementById('apiBadge');
+  const btn = document.getElementById('settingsBtn');
+  if (apiConfig.key) {
+    badge.textContent = 'AI 引擎';
+    badge.className = 'settings-badge on';
+    btn.classList.add('has-key');
+  } else {
+    badge.textContent = '规则引擎';
+    badge.className = 'settings-badge off';
+    btn.classList.remove('has-key');
+  }
+}
+
+function openSettings() {
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('apiStatus').textContent = '';
+  document.getElementById('apiStatus').className = 'api-status';
+  switchProviderUI(apiConfig.provider || 'anthropic');
+  document.getElementById('settingsOverlay').classList.add('show');
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').classList.remove('show');
+}
+
+function switchProvider(provider) {
+  apiConfig.provider = provider;
+  switchProviderUI(provider);
+}
+
+function switchProviderUI(provider) {
+  document.querySelectorAll('#providerTabs .provider-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.provider === provider);
+  });
+  if (provider === 'anthropic') {
+    document.getElementById('apiKeyLabel').textContent = 'Anthropic API Key';
+    document.getElementById('apiKeyInput').placeholder = 'sk-ant-api03-...';
+  } else {
+    document.getElementById('apiKeyLabel').textContent = 'OpenAI API Key';
+    document.getElementById('apiKeyInput').placeholder = 'sk-proj-...';
+  }
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) {
+    document.getElementById('apiStatus').textContent = '请输入 API Key';
+    document.getElementById('apiStatus').className = 'api-status warn';
+    return;
+  }
+  apiConfig.key = key;
+  localStorage.setItem(API_CONFIG_KEY, JSON.stringify(apiConfig));
+  updateApiBadge();
+  document.getElementById('apiStatus').textContent = '已保存，AI 引擎已启用';
+  document.getElementById('apiStatus').className = 'api-status ok';
+  setTimeout(closeSettings, 800);
+}
+
+function clearApiKey() {
+  apiConfig.key = '';
+  localStorage.removeItem(API_CONFIG_KEY);
+  updateApiBadge();
+  document.getElementById('apiKeyInput').value = '';
+  document.getElementById('apiStatus').textContent = '已清除，恢复规则引擎模式';
+  document.getElementById('apiStatus').className = 'api-status warn';
+  setTimeout(closeSettings, 800);
+}
+
+// ===================== AI API CALL =====================
+async function callAIReport(formData) {
+  const prompt = buildAIPrompt(formData);
+
+  if (apiConfig.provider === 'anthropic') {
+    return callAnthropic(prompt);
+  } else {
+    return callOpenAI(prompt);
+  }
+}
+
+async function callAnthropic(prompt) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiConfig.key,
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6-20250501',
+      max_tokens: 4096,
+      system: '你是一位资深宠物营养师和兽医顾问，拥有15年临床经验。请根据提供的猫咪健康问卷数据，生成一份专业、详实、个性化的健康评估报告。报告需使用中文，包含5个板块：基础评估、风险提示、饮食问题、营养建议、推荐方向。使用HTML格式输出，每个板块用 <div class="report-section"> 包裹，板块标题用 <div class="report-section-header">。语气专业但温暖，像一位关心猫咪的医生。',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error('API 调用失败: ' + resp.status + ' ' + err);
+  }
+  const data = await resp.json();
+  return data.content[0].text;
+}
+
+async function callOpenAI(prompt) {
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + apiConfig.key
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o',
+      max_tokens: 4096,
+      messages: [
+        { role: 'system', content: '你是一位资深宠物营养师和兽医顾问，拥有15年临床经验。请根据提供的猫咪健康问卷数据，生成一份专业、详实、个性化的健康评估报告。报告需使用中文，包含5个板块：基础评估、风险提示、饮食问题、营养建议、推荐方向。使用HTML格式输出，每个板块用 <div class="report-section"> 包裹，板块标题用 <div class="report-section-header">。语气专业但温暖，像一位关心猫咪的医生。' },
+        { role: 'user', content: prompt }
+      ]
+    })
+  });
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error('API 调用失败: ' + resp.status + ' ' + err);
+  }
+  const data = await resp.json();
+  return data.choices[0].message.content;
+}
+
+function buildAIPrompt(d) {
+  const ageCat = getAgeCategory(d.age);
+  const ws = getWeightStatus(d.weight, d.age);
+  const histLabels = {
+    pancreatitis: '胰腺炎', heart: '心脏病', bone: '骨骼疾病',
+    ear_mites: '耳螨', stomatitis: '口炎', conjunctivitis: '眼炎',
+    ascites: '腹水', urinary_blockage: '尿闭', hematuria: '血尿',
+    nephritis: '肾炎', ringworm: '猫藓'
+  };
+  const issueLabels = {
+    soft_stool: '软便/拉稀', picky: '挑食', urinary: '泌尿问题',
+    shedding: '掉毛严重', bad_breath: '口臭'
+  };
+  const goalLabels = {
+    gut: '调理肠胃', coat: '改善毛发', gain: '增肥', lose: '减肥',
+    pancreas: '胰腺护理', heart_care: '心脏护理', joint: '关节护理',
+    urinary_care: '泌尿护理', oral: '口腔护理', skin: '皮肤护理',
+    eye: '眼部护理', wellness: '日常保健'
+  };
+
+  return `请根据以下猫咪健康问卷数据，生成一份全面的健康评估报告：
+
+【基本信息】
+- 年龄：${d.age} 岁（${ageCat.label}）
+- 体重：${d.weight} kg（${ws.status}）
+- 是否绝育：${d.sterilized === 'yes' ? '已绝育' : '未绝育'}
+
+【饮食情况】
+- 当前猫粮品牌：${d.brand || '未填写'}
+- 湿粮/冻干摄入：${d.wetFood === 'regular' ? '经常吃' : d.wetFood === 'sometimes' ? '偶尔吃' : '只吃干粮'}
+- 喂食频率：${d.feedFreq === 'free' ? '自助进食' : d.feedFreq === '2' ? '每天2次' : d.feedFreq === '3' ? '每天3次及以上' : '未填写'}
+
+【当前症状】
+${d.healthIssues.length > 0 ? d.healthIssues.map(h => '- ' + (issueLabels[h] || h)).join('\n') : '无明显症状'}
+
+【既往病史】
+${d.medicalHistory.length > 0 ? d.medicalHistory.map(h => '- ' + (histLabels[h] || h)).join('\n') : '无既往病史'}
+
+【用户目标】
+${goalLabels[d.goal] || '未选择'}
+
+请生成包含以下5个板块的报告（使用HTML格式，每个板块用 <div class="report-section"> 包裹）：
+1. 📋 基础评估 — 综合评估猫咪整体健康状况
+2. ⚠️ 风险提示 — 基于数据交叉分析的风险预警
+3. 🍗 饮食问题 — 当前饮食方案的诊断
+4. 💊 营养建议 — 针对性的营养方案和补充建议
+5. 🧭 推荐方向 — 具体的配方方向和行动计划
+
+要求：专业、具体、量化、可执行。板块内使用 <div class="item"> 包裹每条内容。`;
+}
+
+// ===================== REPORT GENERATION =====================
+function generateReport() {
+  if (!validateStep(5)) return;
+  collectStepData(5);
+
+  if (!state.goal) {
+    alert('请选择你的目标');
+    return;
+  }
+
+  // Show loading
+  const overlay = document.getElementById('loadingOverlay');
+  const loadingText = document.querySelector('.loading-text');
+  overlay.classList.add('show');
+
+  // Prepare form data snapshot
+  const formData = {
+    age: state.age,
+    weight: state.weight,
+    sterilized: state.sterilized,
+    brand: state.brand,
+    wetFood: state.wetFood,
+    feedFreq: state.feedFreq,
+    healthIssues: [...state.healthIssues],
+    medicalHistory: [...state.medicalHistory],
+    goal: state.goal
+  };
+
+  // Check if AI API is configured
+  if (apiConfig.key) {
+    // Use AI API
+    if (loadingText) loadingText.innerHTML = 'AI 正在生成报告<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span>';
+
+    callAIReport(formData).then(reportHTML => {
+      showReportResult(reportHTML, overlay);
+    }).catch(err => {
+      console.error('AI API 调用失败，回退到规则引擎:', err);
+      if (loadingText) loadingText.innerHTML = 'AI 调用失败，使用规则引擎<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span>';
+      setTimeout(() => {
+        const fallbackHTML = buildReport();
+        showReportResult(fallbackHTML, overlay);
+      }, 800);
+    });
+  } else {
+    // Rule-based fallback with simulated loading
+    setTimeout(() => {
+      const reportHTML = buildReport();
+      showReportResult(reportHTML, overlay);
+    }, 1800);
+  }
+}
+
+function showReportResult(reportHTML, overlay) {
+  document.getElementById('report-page').innerHTML = reportHTML;
+  document.getElementById('form-page').style.display = 'none';
+  document.getElementById('report-page').style.display = 'block';
+  document.getElementById('stepIndicator').style.display = 'none';
+  overlay.classList.remove('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showPrivacyOverlay();
+  // Save to server in background
+  saveRecordToServer();
+}
+
+function saveRecordToServer() {
+  const d = state;
+  const record = {
+    phone: d.phone,
+    age: d.age,
+    weight: d.weight,
+    sterilized: d.sterilized,
+    brand: d.brand,
+    wetFood: d.wetFood,
+    feedFreq: d.feedFreq,
+    healthIssues: d.healthIssues,
+    medicalHistory: d.medicalHistory,
+    goal: d.goal,
+    timestamp: new Date().toISOString()
+  };
+  fetch('/api/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(record)
+  }).then(r => r.json()).then(resp => {
+    console.log('Record saved:', resp.id);
+  }).catch(err => {
+    console.error('Save failed (offline mode, data not stored):', err.message);
+  });
+}
+
+// ===================== PRIVACY / PASSWORD =====================
+let pinAttempts = 0;
+let pinCooldown = 0;
+let pinMode = 'set'; // 'set' or 'verify'
+const STORAGE_KEY = 'cat_health_pin';
+
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return 'h' + Math.abs(hash).toString(36);
+}
+
+function showPrivacyOverlay() {
+  const overlay = document.getElementById('privacyOverlay');
+  const input = document.getElementById('pinInput');
+  const savedPin = sessionStorage.getItem(STORAGE_KEY);
+
+  input.value = '';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('attemptWarn').textContent = '';
+  pinAttempts = 0;
+
+  if (savedPin) {
+    pinMode = 'verify';
+    document.getElementById('lockIcon').textContent = '🔐';
+    document.getElementById('privacyTitle').textContent = '请输入密码';
+    document.getElementById('privacyHint').textContent = '输入密码查看健康报告';
+    document.getElementById('pinCancelBtn').style.display = '';
+  } else {
+    pinMode = 'set';
+    document.getElementById('lockIcon').textContent = '🔒';
+    document.getElementById('privacyTitle').textContent = '设置查看密码';
+    document.getElementById('privacyHint').textContent = '请设置 4-6 位数字密码，仅本次会话有效';
+    document.getElementById('pinCancelBtn').style.display = 'none';
+  }
+
+  overlay.classList.add('show');
+  document.getElementById('reportLockBtn').style.display = 'none';
+  setTimeout(() => { input.focus(); }, 300);
+}
+
+function handlePinSubmit() {
+  if (pinCooldown > Date.now()) {
+    const remain = Math.ceil((pinCooldown - Date.now()) / 1000);
+    document.getElementById('pinError').textContent = '密码错误次数过多，请 ' + remain + ' 秒后再试';
+    return;
+  }
+
+  const input = document.getElementById('pinInput');
+  const pin = input.value.trim();
+
+  if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
+    document.getElementById('pinError').textContent = '请输入 4-6 位数字密码';
+    input.value = '';
+    input.focus();
+    return;
+  }
+
+  const savedPin = sessionStorage.getItem(STORAGE_KEY);
+
+  if (pinMode === 'set') {
+    sessionStorage.setItem(STORAGE_KEY, simpleHash(pin));
+    document.getElementById('privacyOverlay').classList.remove('show');
+    document.getElementById('reportLockBtn').style.display = '';
+    pinAttempts = 0;
+  } else {
+    if (simpleHash(pin) === savedPin) {
+      document.getElementById('privacyOverlay').classList.remove('show');
+      document.getElementById('reportLockBtn').style.display = '';
+      pinAttempts = 0;
+    } else {
+      pinAttempts++;
+      document.getElementById('pinError').textContent = '密码错误，请重试（' + pinAttempts + '/3 次）';
+      input.value = '';
+      input.focus();
+
+      if (pinAttempts >= 3) {
+        pinCooldown = Date.now() + 30000;
+        document.getElementById('pinError').textContent = '密码错误次数过多，请 30 秒后再试';
+        document.getElementById('attemptWarn').textContent = '';
+        input.disabled = true;
+        setTimeout(() => {
+          input.disabled = false;
+          input.focus();
+          document.getElementById('pinError').textContent = '';
+          document.getElementById('attemptWarn').textContent = '';
+          pinAttempts = 0;
+        }, 30000);
+      }
+    }
+  }
+}
+
+function lockReport() {
+  document.getElementById('privacyOverlay').classList.add('show');
+  document.getElementById('reportLockBtn').style.display = 'none';
+  const input = document.getElementById('pinInput');
+  input.value = '';
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('attemptWarn').textContent = '';
+  pinMode = 'verify';
+  document.getElementById('lockIcon').textContent = '🔐';
+  document.getElementById('privacyTitle').textContent = '报告已锁定';
+  document.getElementById('privacyHint').textContent = '输入密码查看健康报告';
+  document.getElementById('pinCancelBtn').style.display = '';
+  setTimeout(() => { input.focus(); }, 300);
+}
+
+function cancelPrivacy() {
+  document.getElementById('privacyOverlay').classList.remove('show');
+  document.getElementById('reportLockBtn').style.display = '';
+}
+
+// Allow Enter key to submit pin
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('privacyOverlay').classList.contains('show')) {
+    handlePinSubmit();
+  }
+});
+
+// ===================== QR CODE FOR MOBILE ACCESS =====================
+(function initQR() {
+  const loc = window.location;
+  let pageUrl = loc.href;
+
+  // If opened locally (file://), use the server URL
+  if (loc.protocol === 'file:') {
+    pageUrl = 'https://2f33eda6be7ed8.lhr.life/cat-nutrition-assistant.html';
+  }
+
+  // Only show QR button when there's a valid HTTP URL
+  if (pageUrl.startsWith('http')) {
+    const qrToggle = document.getElementById('qrToggle');
+    if (qrToggle) qrToggle.style.display = '';
+  }
+
+  window.toggleQR = function() {
+    const box = document.getElementById('qrBox');
+    if (box.style.display === 'none' || !box.style.display) {
+      box.style.display = '';
+      document.getElementById('qrImage').src =
+        'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(pageUrl);
+      document.getElementById('qrUrl').textContent = pageUrl;
+    } else {
+      box.style.display = 'none';
+    }
+  };
+})();
+
+function backToForm() {
+  document.getElementById('privacyOverlay').classList.remove('show');
+  document.getElementById('reportLockBtn').style.display = 'none';
+  document.getElementById('form-page').style.display = '';
+  document.getElementById('report-page').style.display = 'none';
+  document.getElementById('stepIndicator').style.display = '';
+  showStep(1);
+}
+
+// ===================== REPORT ENGINE =====================
+function buildReport() {
+  const d = state;
+  const ageCat = getAgeCategory(d.age);
+  const weightStatus = getWeightStatus(d.weight, d.age);
+  const healthScore = calcHealthScore(d);
+
+  const sections = [
+    buildBasicAssessment(d, ageCat, weightStatus, healthScore),
+    buildRiskAlerts(d, ageCat, weightStatus),
+    buildDietIssues(d, ageCat, weightStatus),
+    buildNutritionAdvice(d, ageCat, weightStatus),
+    buildRecommendations(d, ageCat, weightStatus)
+  ];
+
+  const scoreClass = healthScore >= 4 ? 'good' : (healthScore >= 2 ? 'warning' : 'danger');
+  const scoreLabel = healthScore >= 4 ? '整体状况良好' : (healthScore >= 2 ? '需要关注' : '亟需改善');
+
+  return `
+    <div class="report-header">
+      <span class="cat-avatar">${ageCat.emoji}</span>
+      <h2>${d.brand ? d.brand + ' · ' : ''}猫咪健康评估报告</h2>
+      <span class="date">${new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'long',day:'numeric'})}</span>
+    </div>
+
+    <div class="score-section">
+      <div class="score-ring ${scoreClass}">${healthScore}<span style="font-size:18px">/5</span></div>
+      <div class="score-label">综合健康评分 · ${scoreLabel}</div>
+    </div>
+
+    ${sections.join('')}
+
+    <div class="report-actions" style="margin-top:8px">
+      <button class="btn btn-secondary" onclick="backToForm()" style="flex:1">← 返回修改</button>
+      <button class="btn btn-primary" onclick="window.print()" style="flex:1">🖨️ 打印报告</button>
+    </div>
+  `;
+}
+
+// --- Age Category ---
+function getAgeCategory(age) {
+  if (age < 0.5) return { label: '幼猫（离乳期）', emoji: '🍼', desc: '处于快速生长发育阶段，营养需求极高' };
+  if (age < 1) return { label: '幼猫（生长期）', emoji: '🐣', desc: '仍在快速成长，骨骼和肌肉发育关键期' };
+  if (age < 7) return { label: '成猫', emoji: '😺', desc: '身体机能处于稳定期，营养以维持为主' };
+  if (age < 10) return { label: '中老年猫', emoji: '😼', desc: '开始进入初老阶段，代谢逐渐放缓' };
+  return { label: '老年猫', emoji: '😿', desc: '身体机能逐渐下降，需要特殊营养支持' };
+}
+
+// --- Weight Status ---
+function getWeightStatus(weight, age) {
+  let idealLow, idealHigh, note;
+  if (age < 0.5) { idealLow = 0.5; idealHigh = 1.5; note = '（幼猫标准）'; }
+  else if (age < 1) { idealLow = 1.5; idealHigh = 3.5; note = '（幼猫标准）'; }
+  else { idealLow = 3.5; idealHigh = 5.5; note = '（成猫通用标准，大型品种猫除外）'; }
+
+  if (weight < idealLow) return { status: '偏瘦', emoji: '⚡', desc: `低于${idealLow}kg，属于偏瘦体型${note}` };
+  if (weight <= idealHigh) return { status: '标准', emoji: '✅', desc: `在${idealLow}-${idealHigh}kg正常范围内，体型标准${note}` };
+  if (weight <= idealHigh + 1.5) return { status: '偏胖', emoji: '⚠️', desc: `超过${idealHigh}kg，属于偏胖体型${note}` };
+  return { status: '肥胖', emoji: '🚨', desc: `远超标准体重，属于肥胖范畴${note}` };
+}
+
+// --- Health Score ---
+function calcHealthScore(d) {
+  let score = 5;
+  const issues = d.healthIssues;
+  const hist = d.medicalHistory;
+  if (issues.includes('soft_stool')) score -= 1;
+  if (issues.includes('urinary')) score -= 1.5;
+  if (issues.includes('bad_breath')) score -= 0.5;
+  if (issues.includes('shedding')) score -= 0.5;
+  if (issues.includes('picky')) score -= 0.5;
+  // Medical history deductions
+  if (hist.includes('pancreatitis')) score -= 2;
+  if (hist.includes('heart')) score -= 2;
+  if (hist.includes('nephritis')) score -= 2;
+  if (hist.includes('urinary_blockage')) score -= 2;
+  if (hist.includes('ascites')) score -= 2;
+  if (hist.includes('hematuria')) score -= 1.5;
+  if (hist.includes('stomatitis')) score -= 1;
+  if (hist.includes('bone')) score -= 1;
+  if (hist.includes('conjunctivitis')) score -= 0.5;
+  if (hist.includes('ear_mites')) score -= 0.5;
+  if (hist.includes('ringworm')) score -= 0.5;
+  const ws = getWeightStatus(d.weight, d.age);
+  if (ws.status === '肥胖') score -= 1.5;
+  else if (ws.status === '偏胖') score -= 0.5;
+  else if (ws.status === '偏瘦') score -= 0.5;
+  if (d.age >= 10) score -= 0.5;
+  return Math.max(1, Math.round(score * 2) / 2);
+}
+
+// --- Section 1: 基础评估 ---
+function buildBasicAssessment(d, ageCat, weightStatus, healthScore) {
+  const items = [
+    `年龄 <b>${d.age} 岁</b>，属于<b>${ageCat.label}</b>，${ageCat.desc}`,
+    `体重 <b>${d.weight} kg</b>，评估为<b>${weightStatus.status}</b> —— ${weightStatus.desc}`,
+    d.sterilized === 'yes'
+      ? '已绝育：绝育后代谢率下降约<b>20-25%</b>，同等食量下更容易发胖，需控制热量摄入'
+      : '未绝育：代谢水平正常，但需关注发情期的食欲变化'
+  ];
+  if (d.medicalHistory.length > 0) {
+    const histLabels = {
+      pancreatitis: '胰腺炎', heart: '心脏病', bone: '骨骼疾病',
+      ear_mites: '耳螨', stomatitis: '口炎', conjunctivitis: '眼炎',
+      ascites: '腹水', urinary_blockage: '尿闭', hematuria: '血尿',
+      nephritis: '肾炎', ringworm: '猫藓'
+    };
+    const histNames = d.medicalHistory.map(h => histLabels[h] || h).join('、');
+    items.push(`既往病史：<b>${histNames}</b>，共 ${d.medicalHistory.length} 项病史记录，营养方案需特别关注相关禁忌和营养支持。`);
+  }
+  items.push(
+    healthScore >= 4
+      ? '综合来看，猫咪整体基础条件<b>良好</b>，重点在于维持现状并针对性优化'
+      : healthScore >= 2
+        ? '综合来看，猫咪存在一些<b>需要关注</b>的问题，建议尽快调整饮食方案'
+        : '综合来看，猫咪健康状况<b>不太理想</b>，建议结合兽医检查并系统性调整饮食'
+  );
+
+  return sectionHTML('📋', '基础评估', items.map(i => `<span class="item-text">${i}</span>`));
+}
+
+// --- Section 2: 风险提示 ---
+function buildRiskAlerts(d, ageCat, weightStatus) {
+  const risks = [];
+
+  if (ageCat.label.includes('老年') || d.age >= 10) {
+    risks.push({ level: 'high', text: '<b>年龄相关风险：</b>猫咪已进入中老年阶段，肾功能、关节健康、心脏功能需要重点监测。建议每半年做一次生化检查，关注肌酐、SDMA等指标。' });
+  }
+  if (ageCat.label.includes('老年') || d.age >= 7) {
+    risks.push({ level: 'medium', text: '<b>初老预警：</b>代谢能力开始下降，建议逐步过渡到中老年配方粮，控制磷含量保护肾脏。' });
+  }
+
+  if (weightStatus.status === '肥胖') {
+    risks.push({ level: 'high', text: '<b>肥胖风险：</b>肥胖是猫咪糖尿病、关节炎、下泌尿道疾病、肝脂质沉积症的重要诱因，减重刻不容缓。' });
+  } else if (weightStatus.status === '偏胖') {
+    risks.push({ level: 'medium', text: '<b>超重趋势：</b>体重呈上升趋势，如果不加控制，未来可能发展为肥胖并引发代谢疾病。' });
+  }
+
+  if (d.sterilized === 'yes' && (weightStatus.status === '偏胖' || weightStatus.status === '肥胖')) {
+    risks.push({ level: 'high', text: '<b>绝育+超重双重风险：</b>绝育后代谢降低叠加体重超标，糖尿病和泌尿系统疾病风险显著升高，必须严格控制热量。' });
+  }
+
+  if (d.healthIssues.includes('urinary')) {
+    risks.push({ level: 'high', text: '<b>泌尿系统风险（FLUTD）：</b>猫咪有泌尿问题迹象，需高度警惕猫下泌尿道疾病。保证充足饮水是关键，同时避免高镁、高磷饮食。' });
+  }
+
+  if (d.healthIssues.includes('soft_stool')) {
+    risks.push({ level: 'medium', text: '<b>消化系统风险：</b>长期软便/拉稀可能导致营养吸收不良、脱水、电解质紊乱。需排查食物过敏、寄生虫、IBD等潜在原因。' });
+  }
+
+  if (d.healthIssues.includes('bad_breath') && d.age >= 7) {
+    risks.push({ level: 'medium', text: '<b>口臭+中高龄：</b>口臭可能是牙周病信号，也可能与肾脏功能下降有关。建议做口腔检查和肾功能评估。' });
+  } else if (d.healthIssues.includes('bad_breath')) {
+    risks.push({ level: 'medium', text: '<b>口腔健康风险：</b>口臭通常是牙菌斑、牙结石的早期信号，长期不处理可能发展为牙周病，影响心脏和肾脏。' });
+  }
+
+  if (d.healthIssues.includes('shedding') && d.healthIssues.includes('picky')) {
+    risks.push({ level: 'medium', text: '<b>营养缺乏叠加风险：</b>掉毛严重+挑食的组合提示可能存在蛋白质或必需脂肪酸摄入不足，长期可能导致皮肤屏障功能下降。' });
+  }
+
+  // Medical history risks
+  if (d.medicalHistory.includes('pancreatitis')) {
+    risks.push({ level: 'high', text: '<b>胰腺炎病史：</b>胰腺炎复发风险较高，饮食需严格控制脂肪摄入（≤ 10% 干物质），避免高脂零食。定期复查胰腺特异性脂肪酶（Spec fPL）。' });
+  }
+  if (d.medicalHistory.includes('heart')) {
+    risks.push({ level: 'high', text: '<b>心脏病史：</b>需长期监控心功能，饮食需控制钠摄入（≤ 0.3% 干物质），保证充足牛磺酸（≥ 0.2% 干物质）。避免剧烈运动应激。' });
+  }
+  if (d.medicalHistory.includes('nephritis') || d.medicalHistory.includes('hematuria')) {
+    risks.push({ level: 'high', text: '<b>肾脏相关病史：</b>肾功能可能已受损，饮食需严格控制磷（≤ 0.6% 干物质），使用优质低磷蛋白来源。定期监测CREA、BUN、SDMA指标。' });
+  }
+  if (d.medicalHistory.includes('urinary_blockage')) {
+    risks.push({ level: 'high', text: '<b>尿闭病史（紧急风险）：</b>发生过尿闭的猫咪复发率极高（约40-60%），必须严格监控排尿情况。一旦再次出现排尿困难，须立即就医，拖延可能导致急性肾衰竭。' });
+  }
+  if (d.medicalHistory.includes('ascites')) {
+    risks.push({ level: 'high', text: '<b>腹水病史：</b>腹水通常是严重疾病的表现（传腹、心衰、肝病、肾病等），需明确原发病因并持续治疗。定期复查腹部超声。' });
+  }
+  if (d.medicalHistory.includes('stomatitis')) {
+    risks.push({ level: 'medium', text: '<b>口炎病史：</b>口炎可能与免疫异常相关，进食疼痛会导致厌食和营养不良。建议软质饮食，严重病例可能需要全口拔牙。' });
+  }
+  if (d.medicalHistory.includes('bone')) {
+    risks.push({ level: 'medium', text: '<b>骨骼疾病史：</b>需关注钙磷比（理想 1.2:1）和维生素D摄入。适当补充葡萄糖胺、软骨素保护关节。控制体重减轻关节负担。' });
+  }
+  if (d.medicalHistory.includes('conjunctivitis')) {
+    risks.push({ level: 'low', text: '<b>眼炎病史：</b>注意补充维生素A和牛磺酸，这两种营养素对眼部健康至关重要。保持环境清洁，减少病原体接触。' });
+  }
+  if (d.medicalHistory.includes('ringworm')) {
+    risks.push({ level: 'low', text: '<b>猫藓病史：</b>猫藓（真菌感染）在免疫力低下时易复发。建议补充Omega-3、维生素E、锌以增强皮肤免疫力。保持环境干燥通风。' });
+  }
+  if (d.medicalHistory.includes('ear_mites')) {
+    risks.push({ level: 'low', text: '<b>耳螨病史：</b>耳螨易在潮湿环境中滋生。保持耳道干燥清洁，定期使用宠物专用洗耳液护理。' });
+  }
+
+  if (d.healthIssues.length === 0 && d.medicalHistory.length === 0) {
+    risks.push({ level: 'none', text: '未选择健康问题或既往病史，猫咪目前无明显健康风险。继续保持良好的喂养习惯，定期体检即可。' });
+  }
+
+  if (risks.length === 0) {
+    risks.push({ level: 'none', text: '未发现显著风险因素，猫咪整体状况良好。' });
+  }
+
+  const riskHTML = risks.map(r => {
+    if (r.level === 'none') return `<div class="item"><span class="item-icon">✅</span><span class="item-text">${r.text}</span></div>`;
+    const cls = r.level === 'high' ? 'risk-item' : 'risk-item medium';
+    return `<div class="${cls}">${r.text}</div>`;
+  }).join('');
+
+  return sectionHTML('⚠️', '风险提示', [riskHTML]);
+}
+
+// --- Section 3: 饮食问题 ---
+function buildDietIssues(d, ageCat, weightStatus) {
+  const issues = [];
+
+  // Brand analysis
+  if (d.brand) {
+    issues.push(`当前猫粮品牌为「<b>${escapeHtml(d.brand)}</b>」，建议核实以下关键指标：<b>粗蛋白 ≥ 35%</b>（干物质）、<b>粗脂肪 15-20%</b>（成猫）/ 18-25%（幼猫）、<b>碳水 ≤ 25%</b>。配料表前三位应为动物蛋白来源。`);
+  }
+
+  // Wet food
+  if (d.wetFood === 'no') {
+    issues.push('<b>只吃干粮</b>，水分摄入可能严重不足。猫咪天生渴感弱，干粮含水量仅约10%，远低于猎物（~70%）。长期缺水是泌尿系统疾病的重要诱因。');
+  } else if (d.wetFood === 'sometimes') {
+    issues.push('偶尔吃湿粮，水分摄入<b>勉强达标</b>。建议增加湿粮比例，尤其是有泌尿问题倾向的猫咪。');
+  } else if (d.wetFood === 'regular') {
+    issues.push('经常吃湿粮/冻干，水分摄入较好。湿粮含水量高（~78%），有助于维持泌尿系统健康。');
+  } else {
+    issues.push('未提供湿粮摄入情况，建议关注猫咪的每日饮水量是否充足。');
+  }
+
+  // Feeding frequency
+  if (d.feedFreq === 'free') {
+    if (d.sterilized === 'yes' && (weightStatus.status === '偏胖' || weightStatus.status === '肥胖')) {
+      issues.push('<b>自助进食 + 绝育后超重</b>，这是危险的组合。自由采食难以控制热量摄入，建议改为定时定量喂食，每天2-3次。');
+    } else if (weightStatus.status === '肥胖') {
+      issues.push('自助进食不利于体重管理，建议改为定时定量，精确控制每日热量摄入。');
+    } else {
+      issues.push('自助进食模式，对体重正常的猫咪可以接受。但需注意定期称重，一旦体重上升应及时调整。');
+    }
+  } else if (d.feedFreq === '2') {
+    issues.push('每天喂2次，是比较合理的频率。但猫咪的胃容量较小，如果每次进食量过大可能增加消化负担。');
+  } else if (d.feedFreq === '3') {
+    issues.push('每天喂3次及以上，少食多餐符合猫咪的自然进食习惯，有助于减轻消化负担，是比较理想的喂食频率。');
+  } else {
+    issues.push('未提供喂食频率，建议每天至少2-3次，少食多餐更有益猫咪健康。');
+  }
+
+  // Cross-reference with health
+  if (d.healthIssues.includes('soft_stool') && d.wetFood === 'regular') {
+    issues.push('<b>软便+常吃湿粮：</b>建议排查是否对某种肉类蛋白过敏（常见过敏原：牛肉、鸡肉、鱼肉），可尝试单一低敏蛋白来源的饮食。');
+  }
+
+  if (d.healthIssues.includes('urinary') && d.wetFood === 'no') {
+    issues.push('<b>泌尿问题+只吃干粮：</b>这是最常见的泌尿问题诱因组合。强烈建议增加湿粮比例，或使用泌尿专用处方粮。');
+  }
+
+  // Cross-reference with goals
+  if (d.goal === 'urinary_care' && d.wetFood === 'no') {
+    issues.push('<b>泌尿护理目标+只吃干粮：</b>这与目标存在冲突。实现泌尿护理的核心是增加水分摄入，必须转为全湿粮或复水冻干喂养。');
+  }
+  if (d.goal === 'pancreas' && d.wetFood !== 'no') {
+    issues.push('<b>胰腺护理目标+湿粮：</b>需确保湿粮脂肪含量 ≤ 10%（干物质），许多市售主食罐脂肪偏高（15-25%），需要仔细甄选低脂罐。');
+  }
+  if (d.goal === 'oral' && d.wetFood === 'no') {
+    issues.push('<b>口腔护理目标+只吃干粮：</b>干硬颗粒可能刺激口腔病灶，建议转为软质湿粮/泥状食物，减少进食疼痛。');
+  }
+
+  // Cross-reference with medical history
+  if (d.medicalHistory.includes('pancreatitis') && d.wetFood !== 'no') {
+    issues.push('<b>胰腺炎病史+湿粮：</b>需仔细核查湿粮脂肪含量。部分主食罐脂肪含量偏高（>20%干物质），不适合胰腺炎猫咪。选择脂肪≤10%的低脂罐。');
+  }
+  if (d.medicalHistory.includes('urinary_blockage') && d.wetFood === 'no') {
+    issues.push('<b>尿闭病史+只吃干粮：</b>这是极高风险组合，尿闭复发率极高。必须立即转换为全湿粮/复水冻干喂养，不可拖延。');
+  }
+  if (d.medicalHistory.includes('nephritis') && d.brand) {
+    issues.push('<b>肾炎病史：</b>需确认当前猫粮磷含量是否 ≤ 0.6%（干物质），市售普通猫粮磷通常偏高（1.0-1.5%），可能需要换肾脏处方粮。');
+  }
+  if (d.medicalHistory.includes('heart') && d.feedFreq === 'free') {
+    issues.push('<b>心脏病+自由进食：</b>心脏病猫咪需严格控制体重和钠摄入，自助进食不利于管理。建议改定时定量，精确控制。');
+  }
+
+  return sectionHTML('🍗', '饮食问题', issues.map(i => `<div class="item"><span class="item-icon">🔍</span><span class="item-text">${i}</span></div>`));
+}
+
+// --- Section 4: 营养建议 ---
+function buildNutritionAdvice(d, ageCat, weightStatus) {
+  const advices = [];
+
+  // Protein
+  if (ageCat.label.includes('幼猫')) {
+    advices.push({ text: '<b>高蛋白需求：</b>幼猫阶段建议粗蛋白 ≥ 40%（干物质），动物蛋白应占总蛋白的90%以上。优质蛋白来源：鸡肉、鸭肉、兔肉、三文鱼。', tags: ['高蛋白', '动物蛋白'] });
+  } else if (ageCat.label.includes('老年')) {
+    advices.push({ text: '<b>优质易消化蛋白：</b>老年猫需要充足蛋白质维持肌肉，但需选择消化率高的来源（鸡肉、火鸡、兔肉），粗蛋白建议 35-40%。', tags: ['优质蛋白', '易消化'] });
+  } else {
+    advices.push({ text: '<b>维持优质蛋白摄入：</b>成猫阶段粗蛋白应 ≥ 35%（干物质），以动物蛋白为主。猫是严格肉食动物，不需要谷物和大量碳水化合物。', tags: ['动物蛋白'] });
+  }
+
+  // Fat & Omega
+  if (d.healthIssues.includes('shedding') || d.goal === 'coat') {
+    advices.push({ text: '<b>Omega-3/6 脂肪酸：</b>建议补充鱼油（富含EPA/DHA），有助于减少炎症、改善皮肤屏障、减少掉毛。每周2-3次，每次按体重0.5-1g。也可选择磷虾油（吸收率更高）。', tags: ['Omega-3', '鱼油', '美毛'] });
+  }
+
+  // Fiber & Probiotics
+  if (d.healthIssues.includes('soft_stool') || d.goal === 'gut') {
+    advices.push({ text: '<b>益生菌 + 益生元：</b>推荐补充布拉迪酵母或乳酸菌制剂，搭配益生元（菊粉、FOS）。有助于恢复肠道菌群平衡，改善软便。严重时可考虑使用处方肠道粮。', tags: ['益生菌', '肠道健康'] });
+    advices.push({ text: '<b>纤维管理：</b>适量添加南瓜泥（富含可溶性纤维）或洋车前子壳粉，有助于调节肠道蠕动，改善粪便成型度。', tags: ['膳食纤维', '南瓜'] });
+  }
+
+  // Water / Urinary
+  if (d.healthIssues.includes('urinary') || d.goal === 'urinary_care') {
+    advices.push({ text: '<b>水分摄入第一优先级：</b>泌尿问题猫咪每天需摄入 40-60ml/kg 水分。方法：增加湿粮比例、使用流动饮水机、在水中添加少量金枪鱼汁（无盐）增加吸引力。', tags: ['饮水', '泌尿健康'] });
+    advices.push({ text: '<b>尿液酸化：</b>可考虑添加DL-蛋氨酸（需遵医嘱），帮助维持尿液弱酸性（pH 6.2-6.5），减少鸟粪石结晶风险。', tags: ['pH平衡'] });
+  }
+
+  // Weight management
+  if (d.goal === 'lose' || weightStatus.status === '肥胖' || weightStatus.status === '偏胖') {
+    advices.push({ text: '<b>热量控制：</b>减肥期每日热量摄入建议为 RER（静息能量需求）的 0.8 倍。RER = 70 × 体重(kg)^0.75。例如${d.weight}kg → 约${Math.round(70 * Math.pow(d.weight, 0.75))} kcal/天，减肥期约${Math.round(70 * Math.pow(d.weight, 0.75) * 0.8)} kcal/天。', tags: ['热量控制', '减肥'] });
+    advices.push({ text: '<b>L-肉碱补充：</b>可辅助脂肪代谢，常见于减肥配方粮中。同时增加互动游戏和运动量，每天至少15分钟有氧活动。', tags: ['L-肉碱', '运动'] });
+  }
+
+  if (d.goal === 'gain' || weightStatus.status === '偏瘦') {
+    advices.push({ text: '<b>增重方案：</b>每日热量摄入提高至 RER 的 1.2-1.4 倍（约${Math.round(70 * Math.pow(d.weight, 0.75) * 1.3)} kcal/天）。选择高能量密度食物（冻干、主食罐头），少量多餐。', tags: ['高热量', '增重'] });
+  }
+
+  // Goal-specific: Pancreas care
+  if (d.goal === 'pancreas') {
+    advices.push({ text: '<b>极低脂饮食：</b>脂肪控制在 ≤ 10%（干物质），选择水煮鸡胸、兔肉等低脂蛋白。严禁任何高脂食物（肥肉、蛋黄、部分鱼肉）。', tags: ['低脂', '胰腺'] });
+    advices.push({ text: '<b>消化酶补充：</b>可考虑添加胰酶补充剂（需兽医指导），帮助脂肪和蛋白质的消化吸收，减轻胰腺工作负担。', tags: ['消化酶', '医嘱'] });
+  }
+  // Goal-specific: Heart care
+  if (d.goal === 'heart_care') {
+    advices.push({ text: '<b>心脏营养方案：</b>牛磺酸 ≥ 0.2%（干物质），钠 ≤ 0.3%。补充Omega-3（EPA+DHA 1-2g/周），辅酶Q10（30-60mg/天）。', tags: ['牛磺酸', '低钠', 'CoQ10'] });
+    advices.push({ text: '<b>应激管理：</b>心脏病猫咪需避免剧烈运动和应激。保持环境安静稳定，使用费洛蒙扩散器帮助放松。', tags: ['应激管理', '费洛蒙'] });
+  }
+  // Goal-specific: Joint care
+  if (d.goal === 'joint') {
+    advices.push({ text: '<b>关节营养支持：</b>葡萄糖胺（125-250mg/天）+ 软骨素（100-200mg/天），钙磷比维持 1.2:1。绿唇贻贝提取物是天然抗炎补充剂。', tags: ['葡萄糖胺', '软骨素', '关节'] });
+    advices.push({ text: '<b>体重与运动：</b>减轻体重是减轻关节压力的最有效方法。低强度运动（慢走、温和逗猫棒），避免跳跃和高处攀爬。', tags: ['体重管理', '低强度运动'] });
+  }
+  // Goal-specific: Urinary care
+  if (d.goal === 'urinary_care') {
+    advices.push({ text: '<b>全湿粮喂养：</b>目标水分摄入 50-60ml/kg/天。主食罐头/复水冻干作为主食，干粮仅作零食。使用流动饮水机增加饮水兴趣。', tags: ['湿粮', '饮水', '泌尿'] });
+    advices.push({ text: '<b>尿液环境管理：</b>镁 ≤ 0.1%（干物质），磷 ≤ 0.8%。目标尿液pH 6.2-6.4。可添加DL-蛋氨酸辅助酸化尿液（需兽医指导剂量）。', tags: ['低镁', 'pH控制', '医嘱'] });
+  }
+  // Goal-specific: Oral care
+  if (d.goal === 'oral') {
+    advices.push({ text: '<b>软质流食为主：</b>主食罐头打成泥状，避免干硬颗粒刺激口腔和牙龈。可轻微冷藏（~15°C）减轻疼痛。避免过烫食物。', tags: ['软食', '低温'] });
+    advices.push({ text: '<b>口腔抗炎方案：</b>补充Omega-3（鱼油 1-2g/周）抗炎。配合宠物专用漱口水或口腔喷雾。定期刷牙（软毛牙刷）。', tags: ['抗炎', '口腔卫生'] });
+  }
+  // Goal-specific: Skin care
+  if (d.goal === 'skin') {
+    advices.push({ text: '<b>皮肤修复营养：</b>锌（15-20mg/kg食物）、维生素E（150-300 IU/天）、生物素（0.5-1mg/天）、Omega-3（1-2g/周）。高质量动物蛋白是皮肤屏障修复的基础。', tags: ['锌', 'VE', '生物素'] });
+    advices.push({ text: '<b>低敏饮食排查：</b>建议使用新型蛋白（兔肉、鹿肉、鸭肉）或水解蛋白进行8-12周食物试验，排查食物过敏原是皮肤问题的常见原因。', tags: ['低敏', '新型蛋白'] });
+  }
+  // Goal-specific: Eye care
+  if (d.goal === 'eye') {
+    advices.push({ text: '<b>眼部营养支持：</b>维生素A（5000-10000 IU/kg食物）、牛磺酸（0.1-0.2%）、叶黄素（1-2mg/天）、玉米黄质。这些是视网膜和角膜健康的关键营养素。', tags: ['VA', '牛磺酸', '叶黄素'] });
+    advices.push({ text: '<b>抗氧化保护：</b>维生素C + E联合抗氧化，减少自由基对眼部组织的氧化损伤。蓝莓提取物富含花青素，有益眼部微循环。', tags: ['抗氧化', '花青素'] });
+  }
+  // Goal-specific: Wellness
+  if (d.goal === 'wellness') {
+    advices.push({ text: '<b>均衡营养维持：</b>优质动物蛋白（≥35%干物质）+ 适量脂肪（15-20%）+ 低碳水（≤25%）。定期轮换蛋白来源（鸡肉→兔肉→鸭肉）避免单一蛋白不耐受。', tags: ['均衡', '轮换', '维持'] });
+    advices.push({ text: '<b>预防性补充：</b>每日益生菌维护肠道菌群，每周2-3次鱼油（0.5-1g/次）抗炎保健，定期化毛（猫草/化毛膏）预防毛球症。', tags: ['益生菌', '鱼油', '化毛'] });
+  }
+
+  // Dental / Oral
+  if (d.healthIssues.includes('bad_breath') || d.goal === 'oral') {
+    advices.push({ text: '<b>口腔护理：</b>建议定期刷牙（宠物专用牙膏），提供洁齿零食或洁齿玩具。如果口臭持续，需到院检查是否存在牙周病或肾脏问题。', tags: ['口腔健康'] });
+  }
+
+  // Picky eating
+  if (d.healthIssues.includes('picky')) {
+    advices.push({ text: '<b>应对挑食：</b>不要频繁更换食物（会强化挑食行为）。定时定量喂食，15分钟不吃就收走。可轻微加热湿粮（~38°C）增加香气释放。尝试不同蛋白来源（兔肉、鹿肉等新蛋白质）。', tags: ['挑食', '行为纠正'] });
+  }
+
+  // Senior specific
+  if (ageCat.label.includes('老年')) {
+    advices.push({ text: '<b>老年猫专属：</b>关注关节健康（葡萄糖胺、软骨素）、心脏健康（牛磺酸）、肾脏保护（控制磷摄入 ≤ 0.8% 干物质）。建议选择老年猫专用配方。', tags: ['关节', '肾脏', '老年'] });
+  }
+
+  // Medical history specific
+  if (d.medicalHistory.includes('pancreatitis')) {
+    advices.push({ text: '<b>胰腺炎饮食管理：</b>脂肪控制在 ≤ 10%（干物质），选择高度易消化的蛋白质（水解蛋白或火鸡、兔肉）。少食多餐减轻胰腺负担。严禁任何高脂零食。', tags: ['低脂', '易消化', '胰腺'] });
+  }
+  if (d.medicalHistory.includes('heart')) {
+    advices.push({ text: '<b>心脏病营养支持：</b>保证充足牛磺酸（≥ 0.2% 干物质），控制钠摄入（≤ 0.3%），补充Omega-3（EPA/DHA）抗炎。辅酶Q10可作为抗氧化补充。', tags: ['牛磺酸', '低钠', 'Omega-3'] });
+  }
+  if (d.medicalHistory.includes('nephritis') || d.medicalHistory.includes('hematuria')) {
+    advices.push({ text: '<b>肾脏保护营养：</b>严格控制磷摄入（≤ 0.6% 干物质），优质低磷蛋白（鸡蛋白、兔肉）。补充Omega-3减缓肾病进展。必要时使用肾脏处方粮。', tags: ['低磷', '优质蛋白', '肾脏'] });
+  }
+  if (d.medicalHistory.includes('urinary_blockage')) {
+    advices.push({ text: '<b>尿闭预防方案：</b>核心在增加水分摄入（目标 50-60ml/kg/天）。使用泌尿专用配方，控制镁（≤ 0.1%）和磷。可添加DL-蛋氨酸维持尿液pH 6.2-6.4。使用流动饮水机。', tags: ['饮水', '低镁', 'pH控制'] });
+  }
+  if (d.medicalHistory.includes('ascites')) {
+    advices.push({ text: '<b>腹水管理：</b>需在兽医指导下控制钠摄入（≤ 0.2% 干物质），使用高生物价蛋白质防止低蛋白血症加重腹水。务必定期复查。', tags: ['低钠', '高生物价蛋白', '医嘱'] });
+  }
+  if (d.medicalHistory.includes('stomatitis')) {
+    advices.push({ text: '<b>口炎饮食调整：</b>提供软质、泥状食物（主食罐头打成泥），避免干硬颗粒刺激口腔。可轻微冷藏食物减轻疼痛感。补充Omega-3抗炎。', tags: ['软食', '抗炎', 'Omega-3'] });
+  }
+  if (d.medicalHistory.includes('bone')) {
+    advices.push({ text: '<b>骨骼关节支持：</b>维持钙磷比 1.2:1，补充葡萄糖胺（125-250mg/天）和软骨素。维生素D促进钙吸收。控制体重减少关节压力。', tags: ['钙磷比', '葡萄糖胺', '关节'] });
+  }
+  if (d.medicalHistory.includes('ringworm')) {
+    advices.push({ text: '<b>皮肤免疫增强：</b>补充锌（15-20mg/kg食物）、维生素E、Omega-3脂肪酸。高质量动物蛋白是皮肤修复的基础。保持环境干燥。', tags: ['锌', '维生素E', '皮肤'] });
+  }
+  if (d.medicalHistory.includes('conjunctivitis')) {
+    advices.push({ text: '<b>眼部营养支持：</b>补充维生素A（5000-10000 IU/kg食物）和牛磺酸。叶黄素和玉米黄质辅助视网膜健康。', tags: ['维生素A', '牛磺酸', '眼部'] });
+  }
+
+  // General
+  advices.push({ text: '<b>牛磺酸保障：</b>牛磺酸是猫咪必需氨基酸，缺乏可导致失明、心脏病。确保食物中牛磺酸含量 ≥ 0.1%（干物质）。湿粮和冻干注意不要过度稀释。', tags: ['牛磺酸', '必需'] });
+
+  const adviceHTML = advices.map(a => {
+    const tagsHTML = a.tags.map(t => `<span class="tag orange">${t}</span>`).join('');
+    return `<div class="item"><span class="item-icon">💡</span><div><span class="item-text">${a.text}</span><div class="tag-list">${tagsHTML}</div></div></div>`;
+  }).join('');
+
+  return sectionHTML('💊', '营养建议', [adviceHTML]);
+}
+
+// --- Section 5: 推荐方向 ---
+function buildRecommendations(d, ageCat, weightStatus) {
+  const recs = [];
+
+  // Goal-based primary direction
+  const goalMap = {
+    'gut': { emoji: '🫃', title: '肠道调理型', desc: '核心方向：选择<b>低敏、易消化、添加益生菌</b>的配方。避免含多种肉源的复杂配方，优先选择单一动物蛋白来源。' },
+    'coat': { emoji: '✨', title: '美毛护肤型', desc: '核心方向：选择<b>富含Omega-3、生物素、锌</b>的配方。鱼肉基底（三文鱼、鲭鱼）+ 额外鱼油补充。' },
+    'gain': { emoji: '📈', title: '高能量增重型', desc: '核心方向：选择<b>高热量密度、高蛋白、高脂肪</b>的配方。冻干 > 主食罐头 > 干粮的能量密度。添加营养膏辅助。' },
+    'lose': { emoji: '📉', title: '体重管理型', desc: '核心方向：选择<b>低脂、高蛋白、高纤维</b>的配方（体重控制/室内猫配方）。关键指标：粗脂肪 ≤ 12%（干物质），粗纤维 ≥ 5%。' },
+    'pancreas': { emoji: '🫁', title: '胰腺护理型', desc: '核心方向：选择<b>极低脂（≤10%干物质）、高度易消化</b>的配方。推荐水解蛋白或新型蛋白来源。严格避免高脂零食，少食多餐。' },
+    'heart_care': { emoji: '🫀', title: '心脏护理型', desc: '核心方向：选择<b>高牛磺酸（≥0.2%）、低钠（≤0.3%）、富含Omega-3</b>的配方。辅酶Q10、维生素E抗氧化支持。' },
+    'joint': { emoji: '🦴', title: '关节护理型', desc: '核心方向：选择<b>添加葡萄糖胺、软骨素、控制钙磷比（1.2:1）</b>的配方。配合适度运动，控制体重减轻关节负担。' },
+    'urinary_care': { emoji: '💧', title: '泌尿护理型', desc: '核心方向：全湿粮喂养确保充足水分（50-60ml/kg/天），选择<b>低镁（≤0.1%）、控制pH（6.2-6.4）</b>的泌尿专用配方。' },
+    'oral': { emoji: '👄', title: '口腔护理型', desc: '核心方向：选择<b>软质易咀嚼、添加抗炎成分</b>的配方。避免硬质干粮刺激。配合洁齿产品和定期口腔检查。' },
+    'skin': { emoji: '🧴', title: '皮肤修复型', desc: '核心方向：选择<b>富含锌、维生素E、Omega-3、生物素</b>的配方。高质量单一蛋白来源减少过敏风险。保持环境干燥通风。' },
+    'eye': { emoji: '👁️', title: '眼部护理型', desc: '核心方向：选择<b>富含维生素A、牛磺酸、叶黄素</b>的配方。抗氧化支持（VC/VE），减少氧化应激对视网膜的损伤。' },
+    'wellness': { emoji: '🛡️', title: '日常保健型', desc: '核心方向：保持<b>均衡营养、优质动物蛋白</b>的基础配方。定期体检监测，关注体重变化。适度补充鱼油和益生菌维持健康。' }
+  };
+
+  const goalRec = goalMap[d.goal] || goalMap['gut'];
+  recs.push({ icon: '🎯', text: `<b>${goalRec.title}方向：</b>${goalRec.desc}` });
+
+  // Food type recommendation
+  if (d.healthIssues.includes('urinary') || d.goal === 'urinary_care') {
+    recs.push({ icon: '💧', text: '<b>优先湿粮：</b>主食罐头/生骨肉/冻干复水喂养，确保每日水分摄入。避免干粮为主食。可考虑泌尿专用处方罐。' });
+  }
+  if (d.healthIssues.includes('soft_stool') || d.goal === 'gut') {
+    recs.push({ icon: '🔬', text: '<b>推荐低敏配方：</b>水解蛋白粮或新型蛋白（兔肉、鹿肉、鸭肉）来源的单一蛋白粮。避免含谷物、豆类过多的配方。' });
+  }
+  if (d.goal === 'coat' || d.healthIssues.includes('shedding') || d.goal === 'skin') {
+    recs.push({ icon: '🐟', text: '<b>鱼肉基底配方：</b>三文鱼/鲭鱼为主原料的猫粮，天然富含Omega-3。搭配蛋黄（生物素）和鱼油，美毛效果更佳。' });
+  }
+  if (d.age < 1) {
+    recs.push({ icon: '🍼', text: '<b>幼猫专属配方：</b>必须选择幼猫专用粮，颗粒小、能量密度高、蛋白质和脂肪含量充足，支持快速生长发育。' });
+  }
+  if (ageCat.label.includes('老年')) {
+    recs.push({ icon: '🧓', text: '<b>老年猫配方：</b>选择老年猫专用粮，控制磷含量（≤ 0.8%），添加葡萄糖胺和软骨素保护关节，适量抗氧化剂（VE、VC）延缓衰老。' });
+  }
+
+  // Medical history specific recommendations
+  if (d.medicalHistory.includes('pancreatitis')) {
+    recs.push({ icon: '🏥', text: '<b>胰腺处方粮：</b>严重胰腺炎病史猫咪建议使用兽医处方粮（低脂易消化配方），不建议自行随意更换。每3-6个月复查胰腺指标。' });
+  }
+  if (d.medicalHistory.includes('heart')) {
+    recs.push({ icon: '🫀', text: '<b>心脏病处方管理：</b>建议使用心脏支持配方（高牛磺酸、低钠），配合兽医开具的心脏药物。需定期心超复查（每6-12个月）。' });
+  }
+  if (d.medicalHistory.includes('nephritis') || d.medicalHistory.includes('hematuria')) {
+    recs.push({ icon: '🫘', text: '<b>肾脏处方粮：</b>肾功能受损猫咪应使用肾脏处方粮（低磷、优质低蛋白），并定期监测CREA/BUN/SDMA（每3-6个月）。' });
+  }
+  if (d.medicalHistory.includes('urinary_blockage')) {
+    recs.push({ icon: '🚨', text: '<b>尿闭预防第一：</b>发生过尿闭的猫咪必须终身管理。推荐全湿粮喂养+泌尿处方粮。家中备好应急联系方式，发现排尿困难立即就医。' });
+  }
+  if (d.medicalHistory.includes('ascites')) {
+    recs.push({ icon: '⚠️', text: '<b>腹水原发病治疗：</b>腹水管理重在治疗原发病（传腹用GS-441524、心衰用利尿剂等）。饮食作为辅助，低钠+高生物价蛋白，严格遵兽医指导。' });
+  }
+  if (d.medicalHistory.includes('stomatitis')) {
+    recs.push({ icon: '👄', text: '<b>口炎管理方案：</b>全软质/流质饮食，避免任何硬质食物。严重病例考虑全口拔牙（治愈率~60-80%）。定期口腔检查和清洁。' });
+  }
+
+  // Goal-specific recommendations
+  if (d.goal === 'pancreas') {
+    recs.push({ icon: '🏥', text: '<b>胰腺处方管理：</b>推荐使用兽医胰腺处方粮（极低脂+水解蛋白）。不建议自行更换。家中禁喂任何高脂零食（冻干蛋黄、肥肉、鱼皮等）。' });
+  }
+  if (d.goal === 'heart_care') {
+    recs.push({ icon: '🫀', text: '<b>心脏处方方向：</b>选择高牛磺酸、低钠配方，配合心脏专科医生指导用药。避免含盐量高的零食。定期心超（每6-12个月）不可中断。' });
+  }
+  if (d.goal === 'joint') {
+    recs.push({ icon: '🦴', text: '<b>关节护理方案：</b>选择添加葡萄糖胺/软骨素的配方或关节护理专用粮。配合温和运动（地面逗猫棒、慢走），避免高处攀爬。控制体重是护关节第一要务。' });
+  }
+  if (d.goal === 'urinary_care') {
+    recs.push({ icon: '💧', text: '<b>泌尿护理方案：</b>全湿粮喂养是泌尿护理的黄金标准。使用泌尿专用配方（低镁、控pH），配合流动饮水机。每日监测排尿量和频率。' });
+  }
+  if (d.goal === 'oral') {
+    recs.push({ icon: '🪥', text: '<b>口腔护理方案：</b>全软质饮食+定期刷牙（每日最佳，至少每周3次）。使用宠物专用牙膏（不可用人用牙膏）。配合洁齿水添加剂和口腔喷雾。' });
+  }
+  if (d.goal === 'skin') {
+    recs.push({ icon: '🧴', text: '<b>皮肤修复方案：</b>建议8-12周低敏饮食试验（新型蛋白或水解蛋白配方），排查食物过敏。同时补充鱼油+锌+VE。环境保持干燥，定期消毒猫窝。' });
+  }
+  if (d.goal === 'eye') {
+    recs.push({ icon: '👁️', text: '<b>眼部护理方案：</b>选择富含VA和牛磺酸的配方，可额外补充蓝莓/叶黄素。保持眼部清洁，定期检查眼压和眼底（尤其老年猫）。' });
+  }
+  if (d.goal === 'wellness') {
+    recs.push({ icon: '🛡️', text: '<b>日常保健方案：</b>均衡优质饮食+年度体检是保健核心。建议每3-4个月轮换一次蛋白来源（鸡→鸭→兔→鱼），避免长期单一饮食。保持适量运动和理想体重。' });
+  }
+
+  recs.push({ icon: '📋', text: '<b>换粮原则：</b>无论选择哪种新粮，必须遵循「7天换粮法」：第1-2天 25%新+75%旧，第3-4天 50%+50%，第5-6天 75%+25%，第7天 100%新。避免突然换粮导致肠胃不适。' });
+
+  recs.push({ icon: '🏥', text: '<b>定期体检：</b>建议每年至少一次全面体检（血常规+生化+尿检），中老年猫每半年一次。有既往病史的猫咪应遵医嘱增加复查频率。营养方案应结合体检结果动态调整。' });
+
+  const recHTML = recs.map(r => `
+    <div class="item"><span class="item-icon">${r.icon}</span><span class="item-text">${r.text}</span></div>
+  `).join('');
+
+  return sectionHTML('🧭', '推荐方向', [recHTML]);
+}
+
+// --- Helper: build a report section ---
+function sectionHTML(icon, title, items) {
+  return `
+    <div class="report-section">
+      <div class="report-section-header">
+        <span class="report-section-icon">${icon}</span>
+        <span class="report-section-title">${title}</span>
+      </div>
+      ${items.join('')}
+    </div>
+  `;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>

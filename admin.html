@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>问卷记录管理</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #FEF9F3;
+    color: #2D1B0E;
+    padding: 20px;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  .sub { color: #8B6F5C; font-size: 14px; margin-bottom: 20px; }
+
+  .stats { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-card {
+    background: #fff; border-radius: 12px; padding: 16px 24px;
+    border: 1px solid #E8D5C4; min-width: 120px; text-align: center;
+  }
+  .stat-card .num { font-size: 32px; font-weight: 900; color: #FF6B35; }
+  .stat-card .label { font-size: 13px; color: #8B6F5C; margin-top: 4px; }
+
+  .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 700;
+    cursor: pointer; border: none; font-family: inherit; transition: 0.2s;
+  }
+  .btn-primary { background: #FF6B35; color: #fff; }
+  .btn-primary:hover { background: #E55A2B; }
+  .btn-outline { background: #fff; color: #8B6F5C; border: 2px solid #E8D5C4; }
+  .btn-outline:hover { border-color: #FF6B35; color: #FF6B35; }
+  .search-input {
+    padding: 10px 14px; border: 2px solid #E8D5C4; border-radius: 10px;
+    font-size: 14px; font-family: inherit; outline: none; width: 200px;
+  }
+  .search-input:focus { border-color: #FF6B35; }
+
+  .record-table {
+    width: 100%; border-collapse: collapse; background: #fff;
+    border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .record-table th {
+    background: #FFF5E6; padding: 12px 14px; text-align: left;
+    font-size: 13px; font-weight: 700; color: #8B6F5C; white-space: nowrap;
+  }
+  .record-table td {
+    padding: 10px 14px; border-top: 1px solid #F0E8DC;
+    font-size: 14px; vertical-align: top;
+  }
+  .record-table tr:hover td { background: #FFFBF6; }
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 10px;
+    font-size: 12px; font-weight: 700;
+  }
+  .badge-green { background: #E8F8E8; color: #27AE60; }
+  .badge-orange { background: #FFF5E6; color: #FF6B35; }
+  .badge-red { background: #FFF0F0; color: #E74C3C; }
+
+  .detail-btn { cursor: pointer; color: #FF6B35; font-weight: 700; font-size: 13px; }
+  .detail-btn:hover { text-decoration: underline; }
+  .detail-panel {
+    display: none; padding: 12px 16px; background: #FFFAF5;
+    border-radius: 8px; margin-top: 4px; font-size: 13px; line-height: 1.8;
+  }
+  .detail-panel.show { display: block; }
+
+  .empty { text-align: center; padding: 60px; color: #8B6F5C; font-size: 16px; }
+
+  @media (max-width: 768px) {
+    .record-table { font-size: 12px; }
+    .record-table th, .record-table td { padding: 8px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🐱 问卷记录管理</h1>
+  <p class="sub">所有填写者的手机号和猫咪健康数据</p>
+
+  <div class="stats">
+    <div class="stat-card"><div class="num" id="statTotal">-</div><div class="label">总记录数</div></div>
+    <div class="stat-card"><div class="num" id="statToday">-</div><div class="label">今日新增</div></div>
+    <div class="stat-card"><div class="num" id="statPhones">-</div><div class="label">独立手机号</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" class="search-input" id="searchInput" placeholder="🔍 搜索手机号..." oninput="renderTable()">
+    <button class="btn btn-primary" onclick="loadData()">🔄 刷新</button>
+    <button class="btn btn-outline" onclick="exportCSV()">📥 导出 CSV</button>
+    <button class="btn btn-outline" onclick="window.open('/cat-nutrition-assistant.html')">📝 新建问卷</button>
+  </div>
+
+  <div id="tableContainer">
+    <div class="empty">加载中...</div>
+  </div>
+</div>
+
+<script>
+let records = [];
+const goalLabels = {
+  gut:'调理肠胃',coat:'改善毛发',gain:'增肥',lose:'减肥',
+  pancreas:'胰腺护理',heart_care:'心脏护理',joint:'关节护理',
+  urinary_care:'泌尿护理',oral:'口腔护理',skin:'皮肤护理',
+  eye:'眼部护理',wellness:'日常保健'
+};
+const issueLabels = {
+  soft_stool:'软便/拉稀',picky:'挑食',urinary:'泌尿问题',
+  shedding:'掉毛严重',bad_breath:'口臭'
+};
+const histLabels = {
+  pancreatitis:'胰腺炎',heart:'心脏病',bone:'骨骼疾病',
+  ear_mites:'耳螨',stomatitis:'口炎',conjunctivitis:'眼炎',
+  ascites:'腹水',urinary_blockage:'尿闭',hematuria:'血尿',
+  nephritis:'肾炎',ringworm:'猫藓'
+};
+
+async function loadData() {
+  try {
+    const resp = await fetch('/api/records');
+    records = await resp.json();
+    updateStats();
+    renderTable();
+  } catch(e) {
+    document.getElementById('tableContainer').innerHTML = '<div class="empty">❌ 加载失败，请确认服务器正在运行</div>';
+  }
+}
+
+async function loadStats() {
+  try {
+    const resp = await fetch('/api/stats');
+    const stats = await resp.json();
+    document.getElementById('statTotal').textContent = stats.total;
+    document.getElementById('statToday').textContent = stats.today;
+    document.getElementById('statPhones').textContent = stats.phones;
+  } catch(e) {}
+}
+
+function updateStats() {
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('statTotal').textContent = records.length;
+  document.getElementById('statToday').textContent = records.filter(r => r.createdAt && r.createdAt.slice(0,10) === today).length;
+  document.getElementById('statPhones').textContent = new Set(records.map(r => r.phone)).size;
+}
+
+function renderTable() {
+  const search = document.getElementById('searchInput').value.trim();
+  let filtered = records;
+  if (search) {
+    filtered = records.filter(r => r.phone && r.phone.includes(search));
+  }
+
+  if (filtered.length === 0) {
+    document.getElementById('tableContainer').innerHTML = '<div class="empty">📭 暂无记录</div>';
+    return;
+  }
+
+  let html = `<table class="record-table">
+    <thead><tr>
+      <th>时间</th><th>手机号</th><th>年龄</th><th>体重</th>
+      <th>绝育</th><th>猫粮</th><th>症状</th><th>病史</th>
+      <th>目标</th><th>详情</th>
+    </tr></thead><tbody>`;
+
+  filtered.forEach((r, i) => {
+    const time = r.createdAt ? new Date(r.createdAt).toLocaleString('zh-CN', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '-';
+    const phone = r.phone ? r.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : '-';
+    const issues = (r.healthIssues || []).map(h => issueLabels[h] || h).join(', ') || '无';
+    const hist = (r.medicalHistory || []).map(h => histLabels[h] || h).join(', ') || '无';
+    const goal = goalLabels[r.goal] || r.goal || '-';
+    const hasHist = (r.medicalHistory || []).length > 0;
+
+    html += `<tr>
+      <td>${time}</td>
+      <td>${phone}</td>
+      <td>${r.age}岁</td>
+      <td>${r.weight}kg</td>
+      <td>${r.sterilized === 'yes' ? '已绝育' : '未绝育'}</td>
+      <td>${esc(r.brand || '-')}</td>
+      <td>${issues}</td>
+      <td>${hist} ${hasHist ? '<span class="badge badge-red">⚠</span>' : ''}</td>
+      <td><span class="badge badge-green">${goal}</span></td>
+      <td><span class="detail-btn" onclick="toggleDetail(${i}, this)">展开 ▼</span></td>
+    </tr>
+    <tr id="detailRow${i}" style="display:none">
+      <td colspan="10">
+        <div class="detail-panel show">
+          📱 完整手机号：<b>${r.phone || '-'}</b> &nbsp;|&nbsp;
+          🍗 湿粮：${r.wetFood === 'regular' ? '经常吃' : r.wetFood === 'sometimes' ? '偶尔吃' : '只吃干粮'} &nbsp;|&nbsp;
+          🕐 喂食：${r.feedFreq === 'free' ? '自助' : r.feedFreq === '2' ? '2次/天' : r.feedFreq === '3' ? '3次+' : '-'} &nbsp;|&nbsp;
+          🆔 ${r.id}
+        </div>
+      </td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('tableContainer').innerHTML = html;
+}
+
+function toggleDetail(i, btn) {
+  const row = document.getElementById('detailRow' + i);
+  if (row.style.display === 'none' || !row.style.display) {
+    row.style.display = '';
+    btn.textContent = '收起 ▲';
+  } else {
+    row.style.display = 'none';
+    btn.textContent = '展开 ▼';
+  }
+}
+
+function exportCSV() {
+  const headers = ['时间','手机号','年龄','体重','绝育','猫粮品牌','湿粮','喂食频率','症状','病史','目标','ID'];
+  const rows = records.map(r => [
+    r.createdAt || '', r.phone || '', r.age, r.weight,
+    r.sterilized === 'yes' ? '已绝育' : '未绝育',
+    r.brand || '',
+    r.wetFood === 'regular' ? '经常吃' : r.wetFood === 'sometimes' ? '偶尔吃' : '只吃干粮',
+    r.feedFreq === 'free' ? '自助' : r.feedFreq === '2' ? '2次/天' : '3次+',
+    (r.healthIssues || []).map(h => issueLabels[h] || h).join('/') || '无',
+    (r.medicalHistory || []).map(h => histLabels[h] || h).join('/') || '无',
+    goalLabels[r.goal] || r.goal || '', r.id || ''
+  ]);
+
+  const BOM = '﻿';
+  const csv = BOM + [headers, ...rows].map(row => row.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'pet-health-records.csv'; a.click();
+}
+
+function esc(s) { return s.replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+loadStats();
+loadData();
+</script>
+</body>
+</html>
