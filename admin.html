@@ -75,8 +75,7 @@
     .record-table th, .record-table td { padding: 8px 6px; }
   }
 </style>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<!-- Using Cloudflare Workers API -->
 </head>
 <body>
 <div class="container">
@@ -102,18 +101,8 @@
 </div>
 
 <script>
-// ===================== FIREBASE CONFIG =====================
-const firebaseConfig = {
-  apiKey: "AIzaSyA6AaOEtlsM64W17RgbVwJ9MHG0auFjbmg",
-  authDomain: "pet-health-survey-6f2a1.firebaseapp.com",
-  projectId: "pet-health-survey-6f2a1",
-  storageBucket: "pet-health-survey-6f2a1.firebasestorage.app",
-  messagingSenderId: "564701938024",
-  appId: "1:564701938024:web:2173bc15592c0991db96dd"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const COLLECTION = 'records';
+// ===================== API CONFIG =====================
+const API_BASE = 'https://pet-health-api.hujinrui85.workers.dev';
 
 // ===================== LABELS =====================
 let records = [];
@@ -137,21 +126,13 @@ const histLabels = {
 // ===================== DATA =====================
 async function loadData() {
   try {
-    const snap = await db.collection(COLLECTION).orderBy('createdAt','desc').get();
-    records = [];
-    snap.forEach(doc => {
-      const d = doc.data();
-      d.id = doc.id;
-      // Convert Firestore timestamp to ISO string
-      if (d.createdAt && d.createdAt.toDate) {
-        d.createdAt = d.createdAt.toDate().toISOString();
-      }
-      records.push(d);
-    });
+    const resp = await fetch(API_BASE + '/api/records');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    records = await resp.json();
     updateStats();
     renderTable();
   } catch(e) {
-    document.getElementById('tableContainer').innerHTML = '<div class="empty">❌ 加载失败<br><small style="color:#E74C3C">' + e.message + '</small><br><small style="color:#8B6F5C">请确认：<br>1. Firestore 规则已发布<br>2. API Key 无限制</small></div>';
+    document.getElementById('tableContainer').innerHTML = '<div class="empty">❌ 加载失败<br><small style="color:#E74C3C">' + e.message + '</small></div>';
   }
 }
 
@@ -250,7 +231,11 @@ function toggleDetail(i, btn) {
 async function deleteRecord(id, btn) {
   if (!confirm('确定删除这条记录吗？此操作不可撤销。')) return;
   try {
-    await db.collection(COLLECTION).doc(id).delete();
+    await fetch(API_BASE + '/api/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    });
     btn.closest('tr').remove();
     loadData();
   } catch(e) {

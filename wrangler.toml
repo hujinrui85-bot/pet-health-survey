@@ -1,0 +1,7 @@
+name = "pet-health-api"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+[[kv_namespaces]]
+binding = "PET_DATA"
+id = "d2efb261c7b74d0f9c8cbc07d97e5d68"
