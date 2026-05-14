@@ -791,11 +791,32 @@
   <div id="form-page">
     <!-- Step 1: 基本信息 -->
     <div class="form-card" id="step1">
-      <div class="step-title">🐱 基本信息</div>
-      <div class="step-desc">了解你的猫咪基本情况</div>
+      <div class="step-title">🐶🐱 基本信息</div>
+      <div class="step-desc">了解你的宠物基本情况</div>
 
       <div class="form-group">
-        <label class="form-label">年龄 <span class="required">*</span> <span class="hint">（岁）</span></label>
+        <label class="form-label">宠物类型 <span class="required">*</span></label>
+        <div class="option-row" id="petTypeGroup">
+          <div class="option-item" data-value="cat" onselect="onPetTypeChange('cat')">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🐱</span>
+            <span class="option-text">猫咪</span>
+          </div>
+          <div class="option-item" data-value="dog" onselect="onPetTypeChange('dog')">
+            <div class="radio-dot"></div>
+            <span class="option-emoji">🐶</span>
+            <span class="option-text">狗狗</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">宠物名字 <span class="hint">（选填）</span></label>
+        <input type="text" class="form-input" id="petName" placeholder="例如：咪咪、旺财" maxlength="20">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">年龄 <span class="required">*</span> <span class="hint" id="ageHint">（岁）</span></label>
         <div class="input-with-unit">
           <input type="number" class="form-input" id="age" placeholder="例如：2.5" min="0" max="25" step="0.5">
           <span class="unit">岁</span>
@@ -803,16 +824,11 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">体重 <span class="required">*</span> <span class="hint">（公斤）</span></label>
+        <label class="form-label">体重 <span class="required">*</span> <span class="hint" id="weightHint">（公斤）</span></label>
         <div class="input-with-unit">
-          <input type="number" class="form-input" id="weight" placeholder="例如：4.2" min="0.5" max="15" step="0.1">
+          <input type="number" class="form-input" id="weight" placeholder="例如：4.2" min="0.1" max="80" step="0.1">
           <span class="unit">kg</span>
         </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">猫咪名字 <span class="hint">（选填）</span></label>
-        <input type="text" class="form-input" id="catName" placeholder="例如：咪咪、汤圆" maxlength="20">
       </div>
 
       <div class="form-group">
@@ -821,14 +837,19 @@
           <div class="option-item" data-value="male">
             <div class="radio-dot"></div>
             <span class="option-emoji">♂️</span>
-            <span class="option-text">公猫</span>
+            <span class="option-text" id="genderMaleLabel">公</span>
           </div>
           <div class="option-item" data-value="female">
             <div class="radio-dot"></div>
             <span class="option-emoji">♀️</span>
-            <span class="option-text">母猫</span>
+            <span class="option-text" id="genderFemaleLabel">母</span>
           </div>
         </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">品种 <span class="hint">（选填）</span></label>
+        <input type="text" class="form-input" id="breed" placeholder="例如：英短、田园猫、金毛、泰迪" maxlength="30">
       </div>
 
       <div class="form-group">
@@ -841,7 +862,7 @@
           </div>
           <div class="option-item" data-value="no">
             <div class="radio-dot"></div>
-            <span class="option-emoji">🐱</span>
+            <span class="option-emoji">🐾</span>
             <span class="option-text">未绝育</span>
           </div>
         </div>
@@ -1201,10 +1222,12 @@ const db = firebase.firestore();
 // ===================== STATE =====================
 const state = {
   currentStep: 1,
-  catName: '',
+  petType: null,
+  petName: '',
   age: null,
   weight: null,
   gender: null,
+  breed: '',
   sterilized: null,
   phone: '',
   brand: '',
@@ -1279,10 +1302,12 @@ function clearDraft() {
 
 function restoreFormUI() {
   // Restore step 1
-  if (state.catName) document.getElementById('catName').value = state.catName;
+  if (state.petType) { selectOption('petTypeGroup', state.petType); onPetTypeChange(state.petType); }
+  if (state.petName) document.getElementById('petName').value = state.petName;
   if (state.age) document.getElementById('age').value = state.age;
   if (state.weight) document.getElementById('weight').value = state.weight;
   if (state.gender) selectOption('genderGroup', state.gender);
+  if (state.breed) document.getElementById('breed').value = state.breed;
   if (state.sterilized) selectOption('sterilizedGroup', state.sterilized);
   if (state.phone) document.getElementById('phone').value = state.phone;
   // Restore step 2
@@ -1317,6 +1342,22 @@ function restoreCheckboxes(groupId, values) {
 // Load draft on startup
 loadDraft();
 
+// Pet type change handler
+function onPetTypeChange(type) {
+  const isDog = type === 'dog';
+  document.getElementById('ageHint').textContent = isDog ? '（岁，大型犬寿命较短）' : '（岁）';
+  document.getElementById('weightHint').textContent = isDog ? '（公斤，0.5-80kg）' : '（公斤，0.5-15kg）';
+  document.getElementById('genderMaleLabel').textContent = isDog ? '公犬' : '公猫';
+  document.getElementById('genderFemaleLabel').textContent = isDog ? '母犬' : '母猫';
+  const ageInput = document.getElementById('age');
+  const weightInput = document.getElementById('weight');
+  ageInput.max = isDog ? 20 : 25;
+  weightInput.max = isDog ? 80 : 15;
+  // Update step title
+  document.querySelector('#step1 .step-title').textContent = isDog ? '🐶 基本信息' : '🐱 基本信息';
+  document.querySelector('#step1 .step-desc').textContent = isDog ? '了解你的狗狗基本情况' : '了解你的猫咪基本情况';
+}
+
 // ===================== VALIDATION =====================
 function validateStep(step) {
   if (step === 1) {
@@ -1331,6 +1372,10 @@ function validateStep(step) {
     if (!weight || weight <= 0 || weight > 15) {
       shakeElement(document.getElementById('weight'));
       alert('请输入有效的猫咪体重（0.5-15kg）');
+      return false;
+    }
+    if (!document.getElementById('petTypeGroup').querySelector('.selected')) {
+      alert('请选择宠物类型（猫咪/狗狗）');
       return false;
     }
     if (!document.getElementById('genderGroup').querySelector('.selected')) {
@@ -1395,10 +1440,12 @@ function getSelectedCheckboxes(groupId) {
 
 function collectStepData(step) {
   if (step === 1) {
-    state.catName = document.getElementById('catName').value.trim();
+    state.petType = getSelectedRadio('petTypeGroup');
+    state.petName = document.getElementById('petName').value.trim();
     state.age = parseFloat(document.getElementById('age').value);
     state.weight = parseFloat(document.getElementById('weight').value);
     state.gender = getSelectedRadio('genderGroup');
+    state.breed = document.getElementById('breed').value.trim();
     state.sterilized = getSelectedRadio('sterilizedGroup');
     state.phone = document.getElementById('phone').value.trim();
   }
@@ -1577,8 +1624,8 @@ async function callOpenAI(prompt) {
 }
 
 function buildAIPrompt(d) {
-  const ageCat = getAgeCategory(d.age);
-  const ws = getWeightStatus(d.weight, d.age);
+  const ageCat = getAgeCategory(d.age, d.petType);
+  const ws = getWeightStatus(d.weight, d.age, d.petType);
   const histLabels = {
     pancreatitis: '胰腺炎', heart: '心脏病', bone: '骨骼疾病',
     ear_mites: '耳螨', stomatitis: '口炎', conjunctivitis: '眼炎',
@@ -1596,13 +1643,19 @@ function buildAIPrompt(d) {
     eye: '眼部护理', wellness: '日常保健'
   };
 
-  return `请根据以下猫咪健康问卷数据，生成一份全面的健康评估报告：
+  const isDog = d.petType === 'dog';
+  const petLabel = isDog ? '狗狗' : '猫咪';
+  const genderLabel = d.gender === 'male' ? (isDog ? '公犬' : '公猫') : (isDog ? '母犬' : '母猫');
+
+  return `请根据以下${petLabel}健康问卷数据，生成一份全面的健康评估报告：
 
 【基本信息】
-- 猫咪名字：${d.catName || '未取名'}
+- 宠物类型：${petLabel}
+- 名字：${d.petName || '未取名'}
+- 品种：${d.breed || '未填写'}
 - 年龄：${d.age} 岁（${ageCat.label}）
 - 体重：${d.weight} kg（${ws.status}）
-- 性别：${d.gender === 'male' ? '公猫' : '母猫'}
+- 性别：${genderLabel}
 - 是否绝育：${d.sterilized === 'yes' ? '已绝育' : '未绝育'}
 
 【饮食情况】
@@ -1699,10 +1752,12 @@ function saveRecordToServer() {
   const d = state;
   const record = {
     phone: d.phone,
-    catName: d.catName,
+    petType: d.petType,
+    petName: d.petName,
     age: d.age,
     weight: d.weight,
     gender: d.gender,
+    breed: d.breed,
     sterilized: d.sterilized,
     brand: d.brand,
     wetFood: d.wetFood,
@@ -1890,8 +1945,8 @@ function backToForm() {
 // ===================== REPORT ENGINE =====================
 function buildReport() {
   const d = state;
-  const ageCat = getAgeCategory(d.age);
-  const weightStatus = getWeightStatus(d.weight, d.age);
+  const ageCat = getAgeCategory(d.age, d.petType);
+  const weightStatus = getWeightStatus(d.weight, d.age, d.petType);
   const healthScore = calcHealthScore(d);
 
   const sections = [
@@ -1908,7 +1963,7 @@ function buildReport() {
   return `
     <div class="report-header">
       <span class="cat-avatar">${ageCat.emoji}</span>
-      <h2>${d.brand ? d.brand + ' · ' : ''}猫咪健康评估报告</h2>
+      <h2>${d.brand ? d.brand + ' · ' : ''}${d.petType === 'dog' ? '狗狗' : '猫咪'}健康评估报告</h2>
       <span class="date">${new Date().toLocaleDateString('zh-CN', {year:'numeric',month:'long',day:'numeric'})}</span>
     </div>
 
@@ -1927,25 +1982,43 @@ function buildReport() {
 }
 
 // --- Age Category ---
-function getAgeCategory(age) {
-  if (age < 0.5) return { label: '幼猫（离乳期）', emoji: '🍼', desc: '处于快速生长发育阶段，营养需求极高' };
-  if (age < 1) return { label: '幼猫（生长期）', emoji: '🐣', desc: '仍在快速成长，骨骼和肌肉发育关键期' };
-  if (age < 7) return { label: '成猫', emoji: '😺', desc: '身体机能处于稳定期，营养以维持为主' };
-  if (age < 10) return { label: '中老年猫', emoji: '😼', desc: '开始进入初老阶段，代谢逐渐放缓' };
-  return { label: '老年猫', emoji: '😿', desc: '身体机能逐渐下降，需要特殊营养支持' };
+function getAgeCategory(age, petType) {
+  const isDog = petType === 'dog';
+  if (isDog) {
+    if (age < 0.5) return { label: '幼犬（哺乳期）', emoji: '🍼', desc: '母乳或幼犬奶粉为主，4周后逐步断奶' };
+    if (age < 1) return { label: '幼犬（快速生长期）', emoji: '🐣', desc: '骨骼和肌肉快速发育，营养需求极高' };
+    if (age < 2) return { label: '青年犬', emoji: '🐕', desc: '身体基本长成，仍在完善肌肉和骨骼' };
+    if (age < 7) return { label: '成年犬', emoji: '🐶', desc: '身体机能处于稳定期' };
+    return { label: '老年犬', emoji: '🐾', desc: '机能开始下降，需要关节和器官保护' };
+  } else {
+    if (age < 0.5) return { label: '幼猫（离乳期）', emoji: '🍼', desc: '处于快速生长发育阶段，营养需求极高' };
+    if (age < 1) return { label: '幼猫（生长期）', emoji: '🐣', desc: '仍在快速成长，骨骼和肌肉发育关键期' };
+    if (age < 7) return { label: '成猫', emoji: '😺', desc: '身体机能处于稳定期，营养以维持为主' };
+    if (age < 10) return { label: '中老年猫', emoji: '😼', desc: '开始进入初老阶段，代谢逐渐放缓' };
+    return { label: '老年猫', emoji: '😿', desc: '身体机能逐渐下降，需要特殊营养支持' };
+  }
 }
 
 // --- Weight Status ---
-function getWeightStatus(weight, age) {
+function getWeightStatus(weight, age, petType) {
+  const isDog = petType === 'dog';
   let idealLow, idealHigh, note;
-  if (age < 0.5) { idealLow = 0.5; idealHigh = 1.5; note = '（幼猫标准）'; }
-  else if (age < 1) { idealLow = 1.5; idealHigh = 3.5; note = '（幼猫标准）'; }
-  else { idealLow = 3.5; idealHigh = 5.5; note = '（成猫通用标准，大型品种猫除外）'; }
-
-  if (weight < idealLow) return { status: '偏瘦', emoji: '⚡', desc: `低于${idealLow}kg，属于偏瘦体型${note}` };
-  if (weight <= idealHigh) return { status: '标准', emoji: '✅', desc: `在${idealLow}-${idealHigh}kg正常范围内，体型标准${note}` };
-  if (weight <= idealHigh + 1.5) return { status: '偏胖', emoji: '⚠️', desc: `超过${idealHigh}kg，属于偏胖体型${note}` };
-  return { status: '肥胖', emoji: '🚨', desc: `远超标准体重，属于肥胖范畴${note}` };
+  if (isDog) {
+    // Dogs vary hugely by breed; use general guidance
+    idealLow = 2; idealHigh = 30; note = '（狗狗体型差异大，需结合品种判断）';
+    if (weight < 2) return { status: '偏瘦（小型犬）', emoji: '⚡', desc: `体重较轻，可能是小型犬或偏瘦${note}` };
+    if (weight <= 10) return { status: '标准（中小型犬范围）', emoji: '✅', desc: `在中小型犬常见体重范围内${note}` };
+    if (weight <= 30) return { status: '标准（中大型犬范围）', emoji: '✅', desc: `在中大型犬常见体重范围内${note}` };
+    return { status: '需关注', emoji: '⚠️', desc: `体重偏高，需结合品种判断是否超重${note}` };
+  } else {
+    if (age < 0.5) { idealLow = 0.5; idealHigh = 1.5; note = '（幼猫标准）'; }
+    else if (age < 1) { idealLow = 1.5; idealHigh = 3.5; note = '（幼猫标准）'; }
+    else { idealLow = 3.5; idealHigh = 5.5; note = '（成猫通用标准，大型品种猫除外）'; }
+    if (weight < idealLow) return { status: '偏瘦', emoji: '⚡', desc: `低于${idealLow}kg，属于偏瘦体型${note}` };
+    if (weight <= idealHigh) return { status: '标准', emoji: '✅', desc: `在${idealLow}-${idealHigh}kg正常范围内，体型标准${note}` };
+    if (weight <= idealHigh + 1.5) return { status: '偏胖', emoji: '⚠️', desc: `超过${idealHigh}kg，属于偏胖体型${note}` };
+    return { status: '肥胖', emoji: '🚨', desc: `远超标准体重，属于肥胖范畴${note}` };
+  }
 }
 
 // --- Health Score ---
@@ -1971,7 +2044,7 @@ function calcHealthScore(d) {
   if (hist.includes('conjunctivitis')) score -= 0.5;
   if (hist.includes('ear_mites')) score -= 0.5;
   if (hist.includes('ringworm')) score -= 0.5;
-  const ws = getWeightStatus(d.weight, d.age);
+  const ws = getWeightStatus(d.weight, d.age, d.petType);
   if (ws.status === '肥胖') score -= 1.5;
   else if (ws.status === '偏胖') score -= 0.5;
   else if (ws.status === '偏瘦') score -= 0.5;
@@ -1981,7 +2054,10 @@ function calcHealthScore(d) {
 
 // --- Section 1: 基础评估 ---
 function buildBasicAssessment(d, ageCat, weightStatus, healthScore) {
+  const isDog = d.petType === 'dog';
+  const petLabel = isDog ? '狗狗' : '猫咪';
   const items = [
+    `宠物类型：<b>${petLabel}</b>${d.breed ? '，品种：<b>' + d.breed + '</b>' : ''}`,
     `年龄 <b>${d.age} 岁</b>，属于<b>${ageCat.label}</b>，${ageCat.desc}`,
     `体重 <b>${d.weight} kg</b>，评估为<b>${weightStatus.status}</b> —— ${weightStatus.desc}`,
     d.sterilized === 'yes'
@@ -2053,8 +2129,11 @@ function buildRiskAlerts(d, ageCat, weightStatus) {
   if (d.water === 'little') {
     risks.push({ level: 'high', text: '<b>饮水不足风险：</b>猫咪喝水量明显偏少，这是泌尿系统疾病（FLUTD、结晶、尿闭）和肾脏问题的重要诱因。尤其公猫尿道狭窄，风险更高。' });
   }
-  if (d.water === 'little' && d.gender === 'male') {
+  if (d.water === 'little' && d.gender === 'male' && d.petType === 'cat') {
     risks.push({ level: 'high', text: '<b>公猫+饮水少（高危组合）：</b>公猫尿道细长弯曲，本就易发尿闭，加上饮水量少，结晶和堵塞风险远高于母猫。必须立即增加水分摄入。' });
+  }
+  if (d.petType === 'dog' && d.weight > 30 && (ageCat.label.includes('老年') || ageCat.label.includes('成年'))) {
+    risks.push({ level: 'medium', text: '<b>大型犬关节风险：</b>大型犬体重较大，随年龄增长髋关节和膝关节退行性病变风险显著增加。建议补充葡萄糖胺和软骨素，控制体重减轻关节负担。' });
   }
 
   // Medical history risks
