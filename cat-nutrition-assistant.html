@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" translate="no">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google" content="notranslate">
 <title>宠物健康综合问卷调查 🐱</title>
 <style>
   :root {
@@ -495,112 +496,7 @@
     40% { opacity: 1; transform: translateY(-4px); }
   }
 
-  /* ============ PRIVACY OVERLAY ============ */
-  .privacy-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(30, 20, 10, 0.92);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 200;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-  .privacy-overlay.show {
-    opacity: 1;
-    pointer-events: all;
-  }
-  .privacy-card {
-    background: #fff;
-    border-radius: 20px;
-    padding: 40px 32px;
-    text-align: center;
-    max-width: 360px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    animation: slideUp 0.4s ease;
-  }
-  @keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  .privacy-card .lock-icon {
-    font-size: 56px;
-    display: block;
-    margin-bottom: 12px;
-  }
-  .privacy-card h3 {
-    font-size: 20px;
-    font-weight: 800;
-    color: #2D1B0E;
-    margin-bottom: 6px;
-  }
-  .privacy-card .privacy-hint {
-    font-size: 13px;
-    color: #8B6F5C;
-    margin-bottom: 20px;
-  }
-  .privacy-card .pin-input {
-    width: 100%;
-    padding: 14px 16px;
-    border: 2px solid #E8D5C4;
-    border-radius: 12px;
-    font-size: 24px;
-    text-align: center;
-    letter-spacing: 8px;
-    font-family: inherit;
-    color: #2D1B0E;
-    background: #FAFAFA;
-    outline: none;
-    transition: border-color 0.3s;
-    -webkit-text-security: disc;
-  }
-  .privacy-card .pin-input:focus {
-    border-color: #FF6B35;
-    box-shadow: 0 0 0 3px rgba(255,107,53,0.1);
-  }
-  .privacy-card .pin-error {
-    color: #E74C3C;
-    font-size: 13px;
-    margin-top: 8px;
-    min-height: 20px;
-    font-weight: 600;
-  }
-  .privacy-card .pin-btns {
-    display: flex;
-    gap: 10px;
-    margin-top: 16px;
-  }
-  .privacy-card .pin-btns .btn {
-    flex: 1;
-    padding: 12px;
-    font-size: 15px;
-  }
-  .privacy-card .attempt-warn {
-    color: #F39C12;
-    font-size: 12px;
-    margin-top: 4px;
-  }
-  .report-lock-btn {
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #fff;
-    border: 2px solid #E8D5C4;
-    font-size: 20px;
-    cursor: pointer;
-    z-index: 50;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    transition: transform 0.2s;
-    display: none;
-  }
-  .report-lock-btn:hover { transform: scale(1.1); }
+
 
   /* ============ REPORT PAGE ============ */
   #report-page {
@@ -796,12 +692,12 @@
       <div class="form-group">
         <label class="form-label">宠物类型 <span class="required">*</span></label>
         <div class="option-row" id="petTypeGroup">
-          <div class="option-item" data-value="cat" onselect="onPetTypeChange('cat')">
+          <div class="option-item" data-value="cat">
             <div class="radio-dot"></div>
             <span class="option-emoji">🐱</span>
             <span class="option-text">猫咪</span>
           </div>
-          <div class="option-item" data-value="dog" onselect="onPetTypeChange('dog')">
+          <div class="option-item" data-value="dog">
             <div class="radio-dot"></div>
             <span class="option-emoji">🐶</span>
             <span class="option-text">狗狗</span>
@@ -1150,7 +1046,7 @@
     <!-- dynamically filled -->
     <div class="report-actions">
       <button class="btn btn-secondary" onclick="backToForm()" style="flex:1">← 返回修改</button>
-      <button class="btn btn-primary" onclick="window.print()" style="flex:1">🖨️ 打印报告</button>
+      <button class="btn btn-primary" onclick="generateReportImage()" style="flex:1">📸 生成报告</button>
     </div>
   </div>
 
@@ -1161,25 +1057,6 @@
   <div class="loading-cat">🐱</div>
   <p class="loading-text">报告生成中<span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span></p>
 </div>
-
-<!-- PRIVACY OVERLAY -->
-<div class="privacy-overlay" id="privacyOverlay">
-  <div class="privacy-card">
-    <span class="lock-icon" id="lockIcon">🔒</span>
-    <h3 id="privacyTitle">设置查看密码</h3>
-    <p class="privacy-hint" id="privacyHint">请设置 4-6 位数字密码，仅本次会话有效</p>
-    <input type="password" class="pin-input" id="pinInput" maxlength="6" placeholder="······" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
-    <p class="pin-error" id="pinError"></p>
-    <p class="attempt-warn" id="attemptWarn"></p>
-    <div class="pin-btns">
-      <button class="btn btn-secondary" id="pinCancelBtn" onclick="cancelPrivacy()" style="display:none">取消</button>
-      <button class="btn btn-primary" id="pinConfirmBtn" onclick="handlePinSubmit()">确认</button>
-    </div>
-  </div>
-</div>
-
-<!-- LOCK BUTTON -->
-<button class="report-lock-btn" id="reportLockBtn" onclick="lockReport()" title="锁定报告">🔒</button>
 
 <!-- SETTINGS MODAL -->
 <div class="settings-overlay" id="settingsOverlay">
@@ -1329,6 +1206,8 @@ function restoreCheckboxes(groupId, values) {
 
 // Load draft on startup
 loadDraft();
+showStep(1);
+document.getElementById('loadingOverlay').classList.remove('show');
 
 // Pet type change handler
 function onPetTypeChange(type) {
@@ -1468,6 +1347,11 @@ document.addEventListener('click', function(e) {
     // Radio: deselect siblings
     parent.querySelectorAll('.option-item').forEach(s => s.classList.remove('selected'));
     item.classList.add('selected');
+  }
+
+  // Trigger onPetTypeChange when pet type changes
+  if (parent.id === 'petTypeGroup') {
+    onPetTypeChange(item.dataset.value);
   }
 });
 
@@ -1730,7 +1614,6 @@ function showReportResult(reportHTML, overlay) {
   document.getElementById('stepIndicator').style.display = 'none';
   overlay.classList.remove('show');
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  showPrivacyOverlay();
   clearDraft();
   // Save to server in background
   saveRecordToServer();
@@ -1767,129 +1650,76 @@ function saveRecordToServer() {
   });
 }
 
-// ===================== PRIVACY / PASSWORD =====================
-let pinAttempts = 0;
-let pinCooldown = 0;
-let pinMode = 'set'; // 'set' or 'verify'
-const STORAGE_KEY = 'cat_health_pin';
+// ===================== GENERATE REPORT IMAGE =====================
+function generateReportImage() {
+  const reportEl = document.getElementById('report-page');
+  const content = reportEl.innerHTML;
+  const styles = document.querySelector('style').outerHTML;
+  const sectionCount = (content.match(/report-section/g) || []).length;
+  const baseHeight = 600 + sectionCount * 280 + 200;
 
-function simpleHash(str) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return 'h' + Math.abs(hash).toString(36);
-}
+  const captureCSS = '<style>body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;color:#2D1B0E;width:750px;padding:20px;background:#fff}.report-actions{display:none!important}.report-section{background:#FFFBF6;border:1px solid #E8D5C4;border-radius:12px;padding:18px;margin-bottom:16px;page-break-inside:avoid}.report-header{text-align:center;padding:10px 0 20px}.report-header .cat-avatar{font-size:64px;display:block}.report-header h2{font-size:24px;font-weight:900;margin-top:8px}.report-header .date{color:#8B6F5C;font-size:14px}.score-section{text-align:center;padding:20px;margin-bottom:16px}.score-ring{width:100px;height:100px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:36px;font-weight:900}.score-ring.good{background:#E8F8E8;color:#27AE60;border:4px solid #27AE60}.score-ring.warning{background:#FFF5E6;color:#FF6B35;border:4px solid #FF6B35}.score-ring.danger{background:#FFF0F0;color:#E74C3C;border:4px solid #E74C3C}.score-label{margin-top:8px;font-size:16px;font-weight:700}.section-title{font-size:18px;font-weight:800;margin-bottom:12px}.alert-item,.advice-item,.rec-item{background:#fff;border-radius:10px;padding:12px 14px;margin-bottom:8px;font-size:14px;line-height:1.6}.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;font-weight:700}.badge-green{background:#E8F8E8;color:#27AE60}.badge-orange{background:#FFF5E6;color:#FF6B35}.badge-red{background:#FFF0F0;color:#E74C3C}.advice-tags{margin-top:6px}.tag{display:inline-block;background:#FFF5E6;color:#FF6B35;padding:2px 8px;border-radius:6px;font-size:11px;margin:2px 4px 2px 0}table{width:100%;border-collapse:collapse;margin:8px 0}td,th{padding:8px 12px;border:1px solid #E8D5C4;text-align:left;font-size:13px}th{background:#FFF5E6;font-weight:700}h4{font-size:15px;margin:6px 0 4px}<\/style>';
 
-function showPrivacyOverlay() {
-  const overlay = document.getElementById('privacyOverlay');
-  const input = document.getElementById('pinInput');
-  const savedPin = sessionStorage.getItem(STORAGE_KEY);
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('width', '750');
+  svg.setAttribute('height', String(baseHeight));
+  svg.setAttribute('viewBox', '0 0 750 ' + baseHeight);
 
-  input.value = '';
-  document.getElementById('pinError').textContent = '';
-  document.getElementById('attemptWarn').textContent = '';
-  pinAttempts = 0;
+  const foreignObject = document.createElementNS(svgNS, 'foreignObject');
+  foreignObject.setAttribute('width', '100%');
+  foreignObject.setAttribute('height', '100%');
+  foreignObject.setAttribute('x', '0');
+  foreignObject.setAttribute('y', '0');
 
-  if (savedPin) {
-    pinMode = 'verify';
-    document.getElementById('lockIcon').textContent = '🔐';
-    document.getElementById('privacyTitle').textContent = '请输入密码';
-    document.getElementById('privacyHint').textContent = '输入密码查看健康报告';
-    document.getElementById('pinCancelBtn').style.display = '';
-  } else {
-    pinMode = 'set';
-    document.getElementById('lockIcon').textContent = '🔒';
-    document.getElementById('privacyTitle').textContent = '设置查看密码';
-    document.getElementById('privacyHint').textContent = '请设置 4-6 位数字密码，仅本次会话有效';
-    document.getElementById('pinCancelBtn').style.display = 'none';
-  }
+  const div = document.createElement('div');
+  div.innerHTML = captureCSS + '<div style="width:750px;padding:20px">' + content + '</div>';
+  foreignObject.appendChild(div);
+  svg.appendChild(foreignObject);
 
-  overlay.classList.add('show');
-  document.getElementById('reportLockBtn').style.display = 'none';
-  setTimeout(() => { input.focus(); }, 300);
-}
+  const svgString = new XMLSerializer().serializeToString(svg);
+  const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+  const svgUrl = URL.createObjectURL(svgBlob);
 
-function handlePinSubmit() {
-  if (pinCooldown > Date.now()) {
-    const remain = Math.ceil((pinCooldown - Date.now()) / 1000);
-    document.getElementById('pinError').textContent = '密码错误次数过多，请 ' + remain + ' 秒后再试';
-    return;
-  }
+  const img = new Image();
+  img.onload = function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 750;
+    canvas.height = baseHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, 750, baseHeight);
 
-  const input = document.getElementById('pinInput');
-  const pin = input.value.trim();
+    canvas.toBlob(function(blob) {
+      URL.revokeObjectURL(svgUrl);
+      const pngUrl = URL.createObjectURL(blob);
 
-  if (pin.length < 4 || pin.length > 6 || !/^\d+$/.test(pin)) {
-    document.getElementById('pinError').textContent = '请输入 4-6 位数字密码';
-    input.value = '';
-    input.focus();
-    return;
-  }
-
-  const savedPin = sessionStorage.getItem(STORAGE_KEY);
-
-  if (pinMode === 'set') {
-    sessionStorage.setItem(STORAGE_KEY, simpleHash(pin));
-    document.getElementById('privacyOverlay').classList.remove('show');
-    document.getElementById('reportLockBtn').style.display = '';
-    pinAttempts = 0;
-  } else {
-    if (simpleHash(pin) === savedPin) {
-      document.getElementById('privacyOverlay').classList.remove('show');
-      document.getElementById('reportLockBtn').style.display = '';
-      pinAttempts = 0;
-    } else {
-      pinAttempts++;
-      document.getElementById('pinError').textContent = '密码错误，请重试（' + pinAttempts + '/3 次）';
-      input.value = '';
-      input.focus();
-
-      if (pinAttempts >= 3) {
-        pinCooldown = Date.now() + 30000;
-        document.getElementById('pinError').textContent = '密码错误次数过多，请 30 秒后再试';
-        document.getElementById('attemptWarn').textContent = '';
-        input.disabled = true;
-        setTimeout(() => {
-          input.disabled = false;
-          input.focus();
-          document.getElementById('pinError').textContent = '';
-          document.getElementById('attemptWarn').textContent = '';
-          pinAttempts = 0;
-        }, 30000);
+      const w = window.open('', '_blank');
+      if (!w) {
+        const a = document.createElement('a');
+        a.href = pngUrl;
+        a.download = '宠物健康报告.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function() { URL.revokeObjectURL(pngUrl); }, 1000);
+        return;
       }
+      w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>宠物健康报告</title><style>body{margin:0;background:#f5f5f5;text-align:center;font-family:"PingFang SC","Microsoft YaHei",sans-serif}img{max-width:100%;height:auto;display:block}.save-hint{background:#FF6B35;color:#fff;padding:14px 20px;font-size:16px;font-weight:700;text-align:center;position:sticky;top:0;z-index:10}.save-hint small{display:block;font-weight:400;font-size:12px;opacity:0.9;margin-top:2px}</style></head><body><div class="save-hint">📸 长按下方图片 → 保存到相册<small>或点击图片后选择"保存图片"</small></div><img src="' + pngUrl + '" alt="宠物健康报告"></body></html>');
+      w.document.close();
+    }, 'image/png');
+  };
+  img.onerror = function() {
+    URL.revokeObjectURL(svgUrl);
+    const w = window.open('', '_blank');
+    if (w) {
+      w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=750"></head><body>' + captureCSS + '<div style="width:750px;padding:20px">' + content + '</div></body></html>');
+      w.document.close();
     }
-  }
+  };
+  img.src = svgUrl;
 }
-
-function lockReport() {
-  document.getElementById('privacyOverlay').classList.add('show');
-  document.getElementById('reportLockBtn').style.display = 'none';
-  const input = document.getElementById('pinInput');
-  input.value = '';
-  document.getElementById('pinError').textContent = '';
-  document.getElementById('attemptWarn').textContent = '';
-  pinMode = 'verify';
-  document.getElementById('lockIcon').textContent = '🔐';
-  document.getElementById('privacyTitle').textContent = '报告已锁定';
-  document.getElementById('privacyHint').textContent = '输入密码查看健康报告';
-  document.getElementById('pinCancelBtn').style.display = '';
-  setTimeout(() => { input.focus(); }, 300);
-}
-
-function cancelPrivacy() {
-  document.getElementById('privacyOverlay').classList.remove('show');
-  document.getElementById('reportLockBtn').style.display = '';
-}
-
-// Allow Enter key to submit pin
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Enter' && document.getElementById('privacyOverlay').classList.contains('show')) {
-    handlePinSubmit();
-  }
-});
 
 // ===================== QR CODE FOR MOBILE ACCESS =====================
 (function initQR() {
@@ -1926,8 +1756,6 @@ document.addEventListener('keydown', function(e) {
 })();
 
 function backToForm() {
-  document.getElementById('privacyOverlay').classList.remove('show');
-  document.getElementById('reportLockBtn').style.display = 'none';
   document.getElementById('form-page').style.display = '';
   document.getElementById('report-page').style.display = 'none';
   document.getElementById('stepIndicator').style.display = '';
@@ -1968,7 +1796,7 @@ function buildReport() {
 
     <div class="report-actions" style="margin-top:8px">
       <button class="btn btn-secondary" onclick="backToForm()" style="flex:1">← 返回修改</button>
-      <button class="btn btn-primary" onclick="window.print()" style="flex:1">🖨️ 打印报告</button>
+      <button class="btn btn-primary" onclick="generateReportImage()" style="flex:1">📸 生成报告</button>
     </div>
   `;
 }
