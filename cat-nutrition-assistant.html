@@ -344,7 +344,9 @@
     background: #FAFAFA;
     user-select: none;
     flex: 1;
-    min-width: 0;
+    min-width: 120px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .option-item:hover {
     border-color: var(--orange-light);
@@ -692,12 +694,12 @@
       <div class="form-group">
         <label class="form-label">宠物类型 <span class="required">*</span></label>
         <div class="option-row" id="petTypeGroup">
-          <div class="option-item" data-value="cat">
+          <div class="option-item" data-value="cat" onclick="selectPetType(this, 'cat')">
             <div class="radio-dot"></div>
             <span class="option-emoji">🐱</span>
             <span class="option-text">猫咪</span>
           </div>
-          <div class="option-item" data-value="dog">
+          <div class="option-item" data-value="dog" onclick="selectPetType(this, 'dog')">
             <div class="radio-dot"></div>
             <span class="option-emoji">🐶</span>
             <span class="option-text">狗狗</span>
@@ -1082,7 +1084,7 @@
 
 <script>
 // ===================== API CONFIG =====================
-const API_BASE = 'https://pet-health-buu.pages.dev';
+const API_BASE = window.location.origin;
 
 // ===================== STATE =====================
 const state = {
@@ -1208,6 +1210,14 @@ function restoreCheckboxes(groupId, values) {
 loadDraft();
 showStep(1);
 document.getElementById('loadingOverlay').classList.remove('show');
+
+// Pet type selection (called by both onclick and event listener)
+function selectPetType(el, type) {
+  const group = document.getElementById('petTypeGroup');
+  group.querySelectorAll('.option-item').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  onPetTypeChange(type);
+}
 
 // Pet type change handler
 function onPetTypeChange(type) {
@@ -1349,10 +1359,8 @@ document.addEventListener('click', function(e) {
     item.classList.add('selected');
   }
 
-  // Trigger onPetTypeChange when pet type changes
-  if (parent.id === 'petTypeGroup') {
-    onPetTypeChange(item.dataset.value);
-  }
+  // Pet type group handled by inline onclick (selectPetType), skip here
+  if (parent.id === 'petTypeGroup') return;
 });
 
 // ===================== API SETTINGS =====================
