@@ -123,7 +123,7 @@ const server = http.createServer(async (req, res) => {
   // === Static file serving ===
   let filePath;
   if (pathname === '/' || pathname === '') {
-    filePath = path.join(DIR, 'cat-nutrition-assistant.html');
+    filePath = path.join(DIR, 'survey.html');
   } else if (pathname === '/admin') {
     filePath = path.join(DIR, 'admin.html');
   } else {

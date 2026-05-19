@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>宠物健康综合问卷调查</title>
+<style>
+  :root {
+    --orange: #FF6B35;
+    --orange-light: #FF8C5A;
+    --orange-bg: #FFF5E6;
+    --green: #27AE60;
+    --red: #E74C3C;
+    --yellow: #F39C12;
+    --text: #2D1B0E;
+    --text-light: #8B6F5C;
+    --card: #FFFFFF;
+    --bg: #FEF9F3;
+    --border: #E8D5C4;
+    --shadow: 0 4px 20px rgba(0,0,0,0.06);
+    --radius: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 24px 0 20px;
+  }
+  .header .emoji { font-size: 48px; display: block; }
+  .header h1 { font-size: 26px; font-weight: 900; color: var(--text); margin: 8px 0 4px; }
+  .header .sub { font-size: 14px; color: var(--text-light); }
+
+  /* Step indicator */
+  .steps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+  .step-dot {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: #fff; border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700; color: var(--text-light);
+    flex-shrink: 0;
+  }
+  .step-dot.active { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .step-dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+  .step-line {
+    width: 24px; height: 2px; background: var(--border);
+    flex-shrink: 0;
+  }
+  .step-line.done { background: var(--green); }
+
+  /* Form card */
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+  .card .desc { font-size: 14px; color: var(--text-light); margin-bottom: 20px; }
+
+  /* Form elements */
+  .form-group { margin-bottom: 18px; }
+  .form-group:last-child { margin-bottom: 0; }
+  .form-label {
+    display: block; font-size: 15px; font-weight: 700; margin-bottom: 8px;
+  }
+  .form-label .req { color: var(--red); }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="tel"] {
+    width: 100%; padding: 12px 14px;
+    border: 2px solid var(--border); border-radius: 10px;
+    font-size: 16px; font-family: inherit; color: var(--text);
+    background: #FAFAFA; outline: none;
+    -webkit-appearance: none;
+  }
+  input:focus { border-color: var(--orange); background: #fff; }
+
+  .input-row { display: flex; gap: 10px; }
+  .input-row .unit {
+    display: flex; align-items: center; padding: 0 14px;
+    background: var(--orange-bg); border-radius: 10px;
+    font-weight: 700; color: var(--orange); white-space: nowrap; font-size: 14px;
+  }
+
+  /* Radio & Checkbox groups */
+  .radio-group { display: flex; flex-wrap: wrap; gap: 10px; }
+  .check-group { display: flex; flex-direction: column; gap: 8px; }
+
+  .radio-item, .check-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 16px; border: 2px solid var(--border); border-radius: 10px;
+    background: #FAFAFA; cursor: pointer; font-size: 15px; font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .radio-item { flex: 1; min-width: 100px; }
+  .radio-item:active, .check-item:active { background: #FFF9F5; }
+
+  .radio-item input, .check-item input { display: none; }
+
+  .radio-dot {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid #C4B5A5; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .radio-item:has(input:checked) .radio-dot {
+    border-color: var(--orange); background: var(--orange);
+  }
+  .radio-item:has(input:checked) .radio-dot::after {
+    content: ''; width: 6px; height: 6px; background: #fff; border-radius: 50%;
+  }
+
+  .check-box {
+    width: 20px; height: 20px; border-radius: 5px;
+    border: 2px solid #C4B5A5; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .check-item:has(input:checked) .check-box {
+    border-color: var(--orange); background: var(--orange);
+  }
+  .check-item:has(input:checked) .check-box::after {
+    content: '\2713'; color: #fff; font-size: 14px; font-weight: 700;
+  }
+
+  .radio-item:has(input:checked),
+  .check-item:has(input:checked) {
+    border-color: var(--orange); background: var(--orange-bg);
+  }
+
+  .item-emoji { font-size: 20px; flex-shrink: 0; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 12px; margin-top: 24px; }
+  .btn {
+    padding: 14px 24px; border-radius: 10px; font-size: 16px;
+    font-weight: 700; font-family: inherit; cursor: pointer; border: none;
+    text-align: center; letter-spacing: 0.5px;
+  }
+  .btn-primary {
+    flex: 1; background: linear-gradient(135deg, var(--orange), var(--orange-light));
+    color: #fff; box-shadow: 0 4px 14px rgba(255,107,53,0.3);
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary {
+    background: #fff; color: var(--text-light); border: 2px solid var(--border);
+  }
+
+  /* Report */
+  .report-section {
+    background: var(--card); border-radius: var(--radius); padding: 24px;
+    margin-bottom: 16px; box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .report-section h3 { font-size: 18px; font-weight: 800; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid var(--orange-bg); }
+  .report-item { display: flex; gap: 8px; margin-bottom: 10px; font-size: 15px; line-height: 1.7; }
+  .report-item .icon { flex-shrink: 0; }
+
+  .score-ring {
+    width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; font-weight: 900; color: #fff;
+  }
+  .score-ring.good { background: linear-gradient(135deg, #27AE60, #2ECC71); }
+  .score-ring.warn { background: linear-gradient(135deg, #F39C12, #F1C40F); }
+  .score-ring.danger { background: linear-gradient(135deg, #E74C3C, #EC7063); }
+
+  .risk-item {
+    padding: 12px 14px; border-radius: 0 10px 10px 0; margin-bottom: 8px;
+    font-size: 14px; border-left: 4px solid;
+  }
+  .risk-item.high { background: #FFF5F5; border-color: var(--red); }
+  .risk-item.mid { background: #FFFBF0; border-color: var(--yellow); }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .tag { padding: 5px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; }
+  .tag.orange { background: var(--orange-bg); color: var(--orange); }
+  .tag.green { background: #E8F8E8; color: var(--green); }
+
+  /* Loading */
+  .loading {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 100; visibility: hidden;
+  }
+  .loading.show { visibility: visible; }
+  .loading .cat { font-size: 60px; animation: bounce 1s infinite; }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  .loading .text { margin-top: 12px; font-size: 16px; font-weight: 700; color: var(--orange); }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--red); color: #fff; padding: 12px 24px;
+    border-radius: 10px; font-weight: 700; font-size: 14px;
+    z-index: 200; opacity: 0; transition: opacity 0.3s;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 480px) {
+    .container { padding: 12px 10px 30px; }
+    .card { padding: 20px 14px; }
+    .radio-group { flex-direction: column; }
+    .header h1 { font-size: 22px; }
+    .radio-item { min-width: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="app">
+  <div class="header">
+    <span class="emoji">🐱</span>
+    <h1>宠物健康综合问卷调查</h1>
+    <p class="sub">全面评估 · 健康管理 · 风险预警</p>
+  </div>
+
+  <!-- Step indicator -->
+  <div class="steps" id="stepIndicator"></div>
+
+  <!-- Step content -->
+  <div id="stepContent"></div>
+
+  <!-- Report content -->
+  <div id="reportContent" style="display:none"></div>
+</div>
+
+<div class="loading" id="loading">
+  <div class="cat">🐱</div>
+  <p class="text">报告中...</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ==================== API ====================
+const API = window.location.origin;
+
+// ==================== STATE ====================
+const S = {
+  step: 1,
+  petType: '',
+  petName: '',
+  age: '',
+  weight: '',
+  gender: '',
+  breed: '',
+  sterilized: '',
+  phone: '',
+  brand: '',
+  wetFood: '',
+  feedFreq: '',
+  water: '',
+  healthIssues: [],
+  medicalHistory: [],
+  goal: ''
+};
+
+// ==================== DATA ====================
+function get(val) {
+  var el = document.getElementById(val);
+  return el ? el.value : '';
+}
+function setVal(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.value = val;
+}
+
+function radioVal(name) {
+  var el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? el.value : '';
+}
+function setRadio(name, val) {
+  var el = document.querySelector('input[name="' + name + '"][value="' + val + '"]');
+  if (el) el.checked = true;
+}
+
+function checkVals(name) {
+  return Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map(function(el) { return el.value; });
+}
+function setChecks(name, vals) {
+  document.querySelectorAll('input[name="' + name + '"]').forEach(function(el) {
+    el.checked = vals.indexOf(el.value) >= 0;
+  });
+}
+
+// ==================== STEPS ====================
+function buildStepIndicator(n, total) {
+  var html = '';
+  for (var i = 1; i <= total; i++) {
+    if (i > 1) html += '<div class="step-line' + (i <= n ? ' done' : '') + '"></div>';
+    var cls = 'step-dot';
+    if (i === n) cls += ' active';
+    else if (i < n) cls += ' done';
+    html += '<div class="' + cls + '">' + i + '</div>';
+  }
+  document.getElementById('stepIndicator').innerHTML = html;
+}
+
+function collectStep() {
+  switch (S.step) {
+    case 1:
+      S.petType = radioVal('petType');
+      S.petName = get('petName');
+      S.age = get('age');
+      S.weight = get('weight');
+      S.gender = radioVal('gender');
+      S.breed = get('breed');
+      S.sterilized = radioVal('sterilized');
+      S.phone = get('phone');
+      break;
+    case 2:
+      S.brand = get('brand');
+      S.wetFood = radioVal('wetFood');
+      S.feedFreq = radioVal('feedFreq');
+      S.water = radioVal('water');
+      break;
+    case 3:
+      S.healthIssues = checkVals('healthIssues');
+      break;
+    case 4:
+      S.medicalHistory = checkVals('medicalHistory');
+      break;
+    case 5:
+      S.goal = radioVal('goal');
+      break;
+  }
+  saveDraft();
+}
+
+function restoreUI() {
+  setRadio('petType', S.petType);
+  setVal('petName', S.petName);
+  setVal('age', S.age);
+  setVal('weight', S.weight);
+  setRadio('gender', S.gender);
+  setVal('breed', S.breed);
+  setRadio('sterilized', S.sterilized);
+  setVal('phone', S.phone);
+  setVal('brand', S.brand);
+  setRadio('wetFood', S.wetFood);
+  setRadio('feedFreq', S.feedFreq);
+  setRadio('water', S.water);
+  setChecks('healthIssues', S.healthIssues);
+  setChecks('medicalHistory', S.medicalHistory);
+  setRadio('goal', S.goal);
+}
+
+function saveDraft() {
+  try { localStorage.setItem('pet_survey_v2', JSON.stringify(S)); } catch(e) {}
+}
+function loadDraft() {
+  try {
+    var d = localStorage.getItem('pet_survey_v2');
+    if (d) {
+      var s = JSON.parse(d);
+      Object.keys(s).forEach(function(k) { if (k in S) S[k] = s[k]; });
+      restoreUI();
+    }
+  } catch(e) {}
+}
+
+// ==================== VALIDATION ====================
+function validate() {
+  switch (S.step) {
+    case 1:
+      if (!S.petType) return toast('请选择宠物类型（猫咪/狗狗）');
+      if (!S.age || S.age <= 0 || S.age > 25) return toast('请输入有效的年龄（0-25岁）');
+      if (!S.weight || S.weight <= 0 || S.weight > 80) return toast('请输入有效的体重（0.5-80kg）');
+      if (!S.gender) return toast('请选择性别');
+      if (!S.sterilized) return toast('请选择是否绝育');
+      if (!S.phone || !/^1[3-9]\d{9}$/.test(S.phone)) return toast('请输入有效的11位手机号码');
+      return true;
+    case 2:
+      if (!S.brand.trim()) return toast('请输入当前宠粮品牌');
+      return true;
+    case 3:
+    case 4:
+    case 5:
+      return true;
+  }
+  return true;
+}
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._tid);
+  t._tid = setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+// ==================== RENDER ====================
+function renderStep() {
+  buildStepIndicator(S.step, 5);
+  var html = '';
+  switch (S.step) {
+    case 1:
+      html = renderStep1(); break;
+    case 2:
+      html = renderStep2(); break;
+    case 3:
+      html = renderStep3(); break;
+    case 4:
+      html = renderStep4(); break;
+    case 5:
+      html = renderStep5(); break;
+  }
+  document.getElementById('stepContent').innerHTML = html;
+  restoreUI();
+}
+
+function renderStep1() {
+  return '<div class="card">' +
+    '<h2>🐾 基本信息</h2><p class="desc">了解你的宠物基本情况</p>' +
+
+    '<div class="form-group"><label class="form-label">宠物类型 <span class="req">*</span></label>' +
+    '<div class="radio-group">' +
+    radioItem('petType', 'cat', '🐱', '猫咪') +
+    radioItem('petType', 'dog', '🐶', '狗狗') +
+    '</div></div>' +
+
+    '<div class="form-group"><label class="form-label">宠物名字</label>' +
+    '<input type="text" id="petName" placeholder="例如：咪咪、旺财" maxlength="20"></div>' +
+
+    '<div class="form-group"><label class="form-label">年龄 <span class="req">*</span></label>' +
+    '<div class="input-row"><input type="number" id="age" placeholder="例如：2.5" min="0" max="25" step="0.5" style="flex:1"><span class="unit">岁</span></div></div>' +
+
+    '<div class="form-group"><label class="form-label">体重 <span class="req">*</span></label>' +
+    '<div class="input-row"><input type="number" id="weight" placeholder="例如：4.2" min="0.1" max="80" step="0.1" style="flex:1"><span class="unit">kg</span></div></div>' +
+
+    '<div class="form-group"><label class="form-label">性别 <span class="req">*</span></label>' +
+    '<div class="radio-group">' +
+    radioItem('gender', 'male', '♂️', '公') +
+    radioItem('gender', 'female', '♀️', '母') +
+    '</div></div>' +
+
+    '<div class="form-group"><label class="form-label">品种</label>' +
+    '<input type="text" id="breed" placeholder="例如：英短、布偶、金毛" maxlength="30"></div>' +
+
+    '<div class="form-group"><label class="form-label">是否绝育 <span class="req">*</span></label>' +
+    '<div class="radio-group">' +
+    radioItem('sterilized', 'yes', '🏥', '已绝育') +
+    radioItem('sterilized', 'no', '🐾', '未绝育') +
+    '</div></div>' +
+
+    '<div class="form-group"><label class="form-label">手机号 <span class="req">*</span></label>' +
+    '<input type="tel" id="phone" placeholder="用于接收健康评估报告" maxlength="11"></div>' +
+
+    '<div class="btn-row"><button class="btn btn-primary" onclick="goNext()">下一步 →</button></div>' +
+    '</div>';
+}
+
+function renderStep2() {
+  return '<div class="card">' +
+    '<h2>🍖 饮食信息</h2><p class="desc">了解宠物的日常饮食习惯</p>' +
+
+    '<div class="form-group"><label class="form-label">当前宠粮品牌 <span class="req">*</span></label>' +
+    '<input type="text" id="brand" placeholder="例如：皇家、冠能、山姆" maxlength="50"></div>' +
+
+    '<div class="form-group"><label class="form-label">是否吃湿粮 / 冻干</label>' +
+    '<div class="radio-group">' +
+    radioItem('wetFood', 'regular', '🥫', '经常吃') +
+    radioItem('wetFood', 'sometimes', '🍖', '偶尔吃') +
+    radioItem('wetFood', 'no', '🍪', '只吃干粮') +
+    '</div></div>' +
+
+    '<div class="form-group"><label class="form-label">每天喂几次</label>' +
+    '<div class="radio-group">' +
+    radioItem('feedFreq', 'free', '⏰', '自助进食') +
+    radioItem('feedFreq', '2', '🍽️', '2次/天') +
+    radioItem('feedFreq', '3', '🍽️', '3次及以上') +
+    '</div></div>' +
+
+    '<div class="form-group"><label class="form-label">每日饮水量</label>' +
+    '<div class="radio-group">' +
+    radioItem('water', 'much', '💧', '喝很多') +
+    radioItem('water', 'normal', '💧', '正常') +
+    radioItem('water', 'little', '⚠️', '喝很少') +
+    '</div></div>' +
+
+    '<div class="btn-row">' +
+    '<button class="btn btn-secondary" onclick="goPrev()">← 上一步</button>' +
+    '<button class="btn btn-primary" onclick="goNext()">下一步 →</button>' +
+    '</div></div>';
+}
+
+function renderStep3() {
+  return '<div class="card">' +
+    '<h2>🩺 健康症状</h2><p class="desc">选填，可多选（跳过表示无明显症状）</p>' +
+    '<div class="check-group">' +
+    checkItem('healthIssues', 'soft_stool', '💩', '软便 / 拉稀') +
+    checkItem('healthIssues', 'picky', '🙄', '挑食') +
+    checkItem('healthIssues', 'urinary', '🚰', '泌尿问题') +
+    checkItem('healthIssues', 'shedding', '🧶', '掉毛严重') +
+    checkItem('healthIssues', 'bad_breath', '😷', '口臭') +
+    checkItem('healthIssues', 'vomiting', '🤮', '呕吐') +
+    '</div>' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-secondary" onclick="goPrev()">← 上一步</button>' +
+    '<button class="btn btn-primary" onclick="goNext()">下一步 →</button>' +
+    '</div></div>';
+}
+
+function renderStep4() {
+  return '<div class="card">' +
+    '<h2>🏥 病史记录</h2><p class="desc">选填，可多选（曾经或正在患有的疾病）</p>' +
+    '<div class="check-group">' +
+    checkItem('medicalHistory', 'pancreatitis', '🫁', '胰腺炎') +
+    checkItem('medicalHistory', 'heart', '🫀', '心脏病') +
+    checkItem('medicalHistory', 'bone', '🦴', '骨骼疾病') +
+    checkItem('medicalHistory', 'ear_mites', '👂', '耳螨') +
+    checkItem('medicalHistory', 'stomatitis', '🦷', '口炎') +
+    checkItem('medicalHistory', 'conjunctivitis', '👁', '眼炎') +
+    checkItem('medicalHistory', 'ascites', '💧', '腹水') +
+    checkItem('medicalHistory', 'urinary_blockage', '🚫', '尿闭') +
+    checkItem('medicalHistory', 'hematuria', '🩸', '血尿') +
+    checkItem('medicalHistory', 'nephritis', '🫘', '肾炎') +
+    checkItem('medicalHistory', 'ringworm', '🍄', '猫藓') +
+    '</div>' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-secondary" onclick="goPrev()">← 上一步</button>' +
+    '<button class="btn btn-primary" onclick="goNext()">下一步 →</button>' +
+    '</div></div>';
+}
+
+function renderStep5() {
+  return '<div class="card">' +
+    '<h2>🎯 护理目标</h2><p class="desc">你最想改善哪个方面？（单选）</p>' +
+    '<div class="radio-group" style="flex-direction:column">' +
+    radioItem('goal', 'gut', '🍽️', '调理肠胃') +
+    radioItem('goal', 'coat', '✨', '改善毛发') +
+    radioItem('goal', 'gain', '⬆️', '增肥') +
+    radioItem('goal', 'lose', '⬇️', '减肥') +
+    radioItem('goal', 'pancreas', '🫁', '胰腺护理') +
+    radioItem('goal', 'heart_care', '🫀', '心脏护理') +
+    radioItem('goal', 'joint', '🦴', '关节护理') +
+    radioItem('goal', 'urinary_care', '🚰', '泌尿护理') +
+    radioItem('goal', 'oral', '🦷', '口腔护理') +
+    radioItem('goal', 'skin', '🧴', '皮肤护理') +
+    radioItem('goal', 'eye', '👁', '眼部护理') +
+    radioItem('goal', 'wellness', '💪', '日常保健') +
+    '</div>' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-secondary" onclick="goPrev()">← 上一步</button>' +
+    '<button class="btn btn-primary" onclick="submit()">✨ 查看报告</button>' +
+    '</div></div>';
+}
+
+// ==================== HELPERS ====================
+function radioItem(name, value, emoji, label) {
+  return '<label class="radio-item">' +
+    '<input type="radio" name="' + name + '" value="' + value + '">' +
+    '<span class="radio-dot"></span>' +
+    '<span class="item-emoji">' + emoji + '</span>' +
+    label +
+    '</label>';
+}
+
+function checkItem(name, value, emoji, label) {
+  return '<label class="check-item">' +
+    '<input type="checkbox" name="' + name + '" value="' + value + '">' +
+    '<span class="check-box"></span>' +
+    '<span class="item-emoji">' + emoji + '</span>' +
+    label +
+    '</label>';
+}
+
+// ==================== NAVIGATION ====================
+function goNext() {
+  collectStep();
+  if (!validate()) return;
+  if (S.step < 5) { S.step++; renderStep(); }
+}
+
+function goPrev() {
+  collectStep();
+  if (S.step > 1) { S.step--; renderStep(); }
+}
+
+// ==================== SUBMIT ====================
+function submit() {
+  collectStep();
+  if (!validate()) return;
+
+  // Save to server
+  var data = {
+    petType: S.petType, petName: S.petName, age: parseFloat(S.age),
+    weight: parseFloat(S.weight), gender: S.gender, breed: S.breed,
+    sterilized: S.sterilized, phone: S.phone, brand: S.brand,
+    wetFood: S.wetFood, feedFreq: S.feedFreq, water: S.water,
+    healthIssues: S.healthIssues, medicalHistory: S.medicalHistory, goal: S.goal
+  };
+
+  showLoading(true);
+  fetch(API + '/api/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  }).then(function(r) { return r.json(); })
+  .then(function() {
+    showReport(data);
+    showLoading(false);
+    localStorage.removeItem('pet_survey_v2');
+  })
+  .catch(function() {
+    showReport(data);
+    showLoading(false);
+  });
+}
+
+// ==================== REPORT ====================
+var LABELS = {
+  pancreatitis: '胰腺炎', heart: '心脏病', bone: '骨骼疾病',
+  ear_mites: '耳螨', stomatitis: '口炎', conjunctivitis: '眼炎',
+  ascites: '腹水', urinary_blockage: '尿闭', hematuria: '血尿',
+  nephritis: '肾炎', ringworm: '猫藓',
+  soft_stool: '软便/拉稀', picky: '挑食', urinary: '泌尿问题',
+  shedding: '掉毛严重', bad_breath: '口臭', vomiting: '呕吐',
+  gut: '调理肠胃', coat: '改善毛发', gain: '增肥', lose: '减肥',
+  pancreas: '胰腺护理', heart_care: '心脏护理', joint: '关节护理',
+  urinary_care: '泌尿护理', oral: '口腔护理', skin: '皮肤护理',
+  eye: '眼部护理', wellness: '日常保健'
+};
+
+function showReport(d) {
+  var isDog = d.petType === 'dog';
+  var petLabel = isDog ? '狗狗' : '猫咪';
+  var genderLabel = d.gender === 'male' ? (isDog ? '公犬' : '公猫') : (isDog ? '母犬' : '母猫');
+
+  // Age category
+  var ageCat = getAgeCat(d.age, isDog);
+  var weightStatus = getWeightStatus(d.weight, d.age, isDog);
+
+  // Score
+  var score = 80;
+  if ((d.healthIssues || []).length > 0) score -= (d.healthIssues.length * 3);
+  if ((d.medicalHistory || []).length > 0) score -= (d.medicalHistory.length * 7);
+  if (d.water === 'little') score -= 5;
+  if (d.sterilized === 'no' && d.age > 1) score -= 3;
+  score = Math.max(20, Math.min(100, score));
+  var scoreClass = score >= 70 ? 'good' : score >= 45 ? 'warn' : 'danger';
+  var scoreLabel = score >= 70 ? '良好' : score >= 45 ? '一般' : '需关注';
+
+  // Risks
+  var risks = [];
+  if (d.water === 'little') risks.push({ level: 'high', text: '饮水量偏少，建议增加湿粮或流动饮水机，长期饮水不足易导致泌尿问题' });
+  if ((d.healthIssues || []).indexOf('vomiting') >= 0) risks.push({ level: 'high', text: '存在呕吐症状，建议观察频率，若持续需就医检查肠胃' });
+  if ((d.medicalHistory || []).indexOf('urinary_blockage') >= 0) risks.push({ level: 'high', text: '有尿闭病史，需密切关注排尿情况，建议定期体检' });
+  if ((d.healthIssues || []).indexOf('soft_stool') >= 0) risks.push({ level: 'mid', text: '存在软便问题，可能和粮的成分或肠胃敏感有关' });
+  if (weightStatus.issue) risks.push({ level: 'mid', text: weightStatus.issue });
+  if ((d.medicalHistory || []).indexOf('ringworm') >= 0) risks.push({ level: 'mid', text: '有猫藓病史，注意环境消毒和营养补充' });
+
+  var html = '<div style="text-align:center;padding:20px 0">' +
+    '<span style="font-size:56px">' + (isDog ? '🐶' : '🐱') + '</span>' +
+    '<h2 style="font-size:22px;margin:8px 0">' + esc(d.brand) + ' · ' + petLabel + '健康评估报告</h2>' +
+    '<p style="color:var(--text-light);font-size:13px">' + new Date().toLocaleString('zh-CN') + '</p>' +
+    '</div>' +
+
+    '<div style="text-align:center;padding:10px 0 20px">' +
+    '<div class="score-ring ' + scoreClass + '">' + score + '</div>' +
+    '<p style="font-weight:700;font-size:16px">整体健康：' + scoreLabel + '</p>' +
+    '</div>' +
+
+    section('📋', '基础评估', [
+      item('宠物类型', petLabel + (d.breed ? '，品种：' + esc(d.breed) : '')),
+      item('年龄', d.age + '岁（' + ageCat.label + '）'),
+      item('体重', d.weight + 'kg' + weightStatus.note),
+      item('性别', genderLabel + '，' + (d.sterilized === 'yes' ? '已绝育' : '未绝育')),
+      item('宠粮品牌', esc(d.brand)),
+      item('饮食', (d.wetFood === 'regular' ? '经常吃湿粮' : d.wetFood === 'sometimes' ? '偶尔吃湿粮' : '只吃干粮') + '，' + (d.feedFreq === 'free' ? '自助进食' : d.feedFreq === '2' ? '2次/天' : '3次及以上')),
+      item('饮水', d.water === 'much' ? '喝很多' : d.water === 'normal' ? '正常' : '⚠️ 喝很少')
+    ]);
+
+  if ((d.healthIssues || []).length > 0) {
+    html += section('🩺', '当前症状', [
+      item('', (d.healthIssues || []).map(function(h) { return LABELS[h] || h; }).join('、'))
+    ]);
+  }
+  if ((d.medicalHistory || []).length > 0) {
+    html += section('🏥', '病史记录', [
+      item('', (d.medicalHistory || []).map(function(h) { return LABELS[h] || h; }).join('、'))
+    ]);
+  }
+  if (risks.length > 0) {
+    var riskHtml = risks.map(function(r) {
+      return '<div class="risk-item ' + r.level + '">' + r.text + '</div>';
+    }).join('');
+    html += section('⚠️', '风险提示', [riskHtml], true);
+  }
+  if (d.goal) {
+    html += section('🎯', '护理目标', [
+      item('关注方向', LABELS[d.goal] || d.goal)
+    ]);
+    html += '<div style="margin-top:8px"><div class="tag-row">' +
+      '<span class="tag green">每日观察排便</span>' +
+      '<span class="tag orange">定期体重监测</span>' +
+      '<span class="tag orange">保证充足饮水</span>' +
+      '</div></div>';
+  }
+
+  document.getElementById('stepContent').style.display = 'none';
+  document.getElementById('stepIndicator').style.display = 'none';
+  var rc = document.getElementById('reportContent');
+  rc.innerHTML = html + '<div class="btn-row"><button class="btn btn-primary" onclick="backToForm()">← 返回修改</button></div>';
+  rc.style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function section(icon, title, content, raw) {
+  var body = raw ? content : content.map(function(it) {
+    return '<div class="report-item"><span class="icon">' + it.icon + '</span><div>' + it.text + '</div></div>';
+  }).join('');
+  return '<div class="report-section"><h3>' + icon + ' ' + title + '</h3>' + body + '</div>';
+}
+
+function item(icon, text) {
+  return { icon: icon, text: text };
+}
+
+function backToForm() {
+  document.getElementById('reportContent').style.display = 'none';
+  document.getElementById('stepContent').style.display = '';
+  document.getElementById('stepIndicator').style.display = '';
+  S.step = 1;
+  renderStep();
+}
+
+function showLoading(show) {
+  document.getElementById('loading').className = 'loading' + (show ? ' show' : '');
+}
+
+function getAgeCat(age, isDog) {
+  if (age < 1) return { label: isDog ? '幼犬期' : '幼猫期' };
+  if (age < 7) return { label: isDog ? '成年期' : '成年期' };
+  return { label: isDog ? '老年期' : '老年期' };
+}
+
+function getWeightStatus(w, age, isDog) {
+  if (isDog) return { note: '（狗狗体型差异大，需结合品种判断）', issue: null };
+  if (w < 2.5) return { note: '（偏瘦）', issue: '体重偏轻，建议检查是否有寄生虫或消化问题' };
+  if (w > 7) return { note: '（偏重）', issue: '体重偏高，建议控制饮食并增加运动' };
+  return { note: '（正常范围）', issue: null };
+}
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+// ==================== INIT ====================
+loadDraft();
+renderStep();
+
+// Pet type change listener - update labels when pet type changes
+document.addEventListener('change', function(e) {
+  if (e.target.name === 'petType') {
+    var isDog = e.target.value === 'dog';
+    // Update step 2+ labels if visible (minor visual tweaks happen on re-render)
+    S.petType = e.target.value;
+    saveDraft();
+  }
+});
+</script>
+
+</body>
+</html>
